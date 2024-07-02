@@ -11,7 +11,12 @@ load_dotenv(dotenv_path='config/.env')
 from dotenv import load_dotenv
 load_dotenv(dotenv_path='config/.env')
 # Параметры подключения из переменных окружения
+<<<<<<< HEAD
 DATABASE_URL = os.getenv("DATABASE_URL")
+=======
+# DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("DATABASE_URL_SQLITE")
+>>>>>>> f474fef (Updated)
 
 # Создание асинхронного двигателя с использованием строки подключения PostgreSQL
 engine = create_async_engine(DATABASE_URL, echo=True)

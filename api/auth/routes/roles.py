@@ -2,12 +2,20 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+<<<<<<< HEAD
 from config.db import get_db
 from api.auth import models, schemas
+=======
+from sqlalchemy.exc import IntegrityError
+from config.db import get_db
+from api.auth.models import Role
+from api.auth.schemas import RoleCreate
+>>>>>>> f474fef (Updated)
 from typing import List
 
 router = APIRouter()
 
+<<<<<<< HEAD
 @router.post("/", response_model=schemas.Role)
 async def create_role(role: schemas.RoleCreate, db: AsyncSession = Depends(get_db)):
     try:
@@ -61,3 +69,55 @@ async def delete_role(role_id: int, db: AsyncSession = Depends(get_db)):
     await db.delete(db_role)
     await db.commit()
     return db_role
+=======
+# Получаем роль
+async def get_role(db: AsyncSession, role_name: str = "user") -> Role:
+    result = await db.execute(select(Role).filter_by(name=role_name))
+    role = result.scalars().first()
+
+    # Если роли не определены, создаем "admin" при первой записи
+    if not role:
+        first_role = await db.execute(select(Role))
+        if first_role.scalars().first() is None:
+            role = Role(name="admin", description="Администратор")
+        else:
+            role = Role(name=role_name, description="Пользователи")
+        db.add(role)
+        await db.commit()
+        await db.refresh(role)
+
+    return role
+
+@router.post("/", response_model=RoleCreate)
+async def create_role(role: RoleCreate, db: AsyncSession = Depends(get_db)):
+    existing_role = await db.execute(select(Role).filter_by(name=role.name))
+    if existing_role.scalars().first():
+        raise HTTPException(status_code=400, detail="Роль уже существует")
+    
+    new_role = Role(name=role.name, description=role.description)
+    db.add(new_role)
+    
+    try:
+        await db.commit()
+        await db.refresh(new_role)
+    except IntegrityError:
+        raise HTTPException(status_code=400, detail="Роль уже существует")
+    
+    return new_role
+
+@router.get("/", response_model=List[RoleCreate])
+async def read_roles(skip: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Role).offset(skip).limit(limit))
+    roles = result.scalars().all()
+    return roles
+
+@router.get("/{role_id}", response_model=RoleCreate)
+async def read_role(role_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Role).filter_by(id=role_id))
+    role = result.scalars().first()
+    
+    if not role:
+        raise HTTPException(status_code=404, detail="Роль не найдена")
+    
+    return role
+>>>>>>> f474fef (Updated)

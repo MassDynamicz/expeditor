@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # config/middleware.py
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import Request
@@ -7,6 +8,14 @@ from sqlalchemy.future import select
 from api.auth.models import UserSession
 from config.db import get_db
 import asyncio
+=======
+from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Request, Response
+from config.db import async_session
+
+# CORS origins
+>>>>>>> f474fef (Updated)
 origins = [
     "http://localhost:8000",
     "http://localhost:8080",
@@ -23,6 +32,7 @@ def add_cors_middleware(app):
         allow_headers=["*"],
     )
 
+<<<<<<< HEAD
 # Middleware для подсчета трафика
 class TrafficMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -64,3 +74,11 @@ class TrafficMiddleware(BaseHTTPMiddleware):
     async def get_user_session(self, db: AsyncSession, token: str) -> UserSession:
         result = await db.execute(select(UserSession).filter(UserSession.token == token))
         return result.scalars().first()
+=======
+# DB session middleware
+async def db_session_middleware(request: Request, call_next):
+    async with async_session() as session:
+        request.state.db = session
+        response = await call_next(request)
+    return response
+>>>>>>> f474fef (Updated)

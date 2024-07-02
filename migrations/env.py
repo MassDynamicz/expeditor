@@ -35,8 +35,13 @@ import_submodules('api')
 # Загрузка переменных окружения из файла .env
 load_dotenv(dotenv_path='config/.env')
 # Установка URL подключения из переменной окружения
+<<<<<<< HEAD
 database_url = os.getenv("DATABASE_URL")
 # database_url = os.getenv("DATABASE_URL_SQLITE")
+=======
+# database_url = os.getenv("DATABASE_URL")
+database_url = os.getenv("DATABASE_URL_SQLITE")
+>>>>>>> f474fef (Updated)
 if not database_url:
     raise ValueError("DATABASE_URL не задана в файле .env")
 
