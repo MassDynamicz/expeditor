@@ -1,2 +1,0 @@
-# expeditor
-FastApi Application
