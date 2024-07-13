@@ -15,17 +15,5 @@ class Wagon(Base):
 
     dislocation_wagon = relationship("Dislocation", back_populates="wagon")
 
-    transport_wagons = relationship(
-        "OrderRW_Transport",
-        back_populates="wagon",
-        foreign_keys='OrderRW_Transport.wagon_id'
-    )
-
-    transport_wagons_cn = relationship(
-        "OrderRW_Transport",
-        back_populates="wagon_cn",
-        foreign_keys='OrderRW_Transport.wagon_cn_id'
-    )
-
     def __repr__(self):
         return f"'{self.name}'"

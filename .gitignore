@@ -160,4 +160,3 @@ cython_debug/
 #.idea/
 description.txt
 .idea
-migrations/versions/

@@ -1,5 +1,4 @@
-import sys
-import os
+import sys, os
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -25,7 +24,7 @@ def create_app() -> FastAPI:
             "docExpansion": "none",  # сворачиваем вкладки по умолчанию
             "displayRequestDuration": True,
             "filter": True,
-        }
+        },
     )
 
     # Подключение CORS middleware
@@ -33,9 +32,6 @@ def create_app() -> FastAPI:
 
     # Подключение DB session middleware
     app.add_middleware(BaseHTTPMiddleware, dispatch=db_session_middleware)
-
-    # Подключение Traffic middleware (раскомментируйте, если у вас есть TrafficMiddleware)
-    # app.add_middleware(TrafficMiddleware)
 
     # Подключение статических файлов
     app.mount("/static", StaticFiles(directory="static"), name="static")

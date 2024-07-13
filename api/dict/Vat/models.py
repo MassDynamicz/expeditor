@@ -14,9 +14,6 @@ class Vat(Base):
     rate = Column(Numeric(15, 4), default=0)
 
     operations = relationship("Operation", back_populates="vat")
-    orderrw_routes = relationship("OrderRW_Route", back_populates="vat")
-    transport_vat = relationship("OrderRW_Transport", back_populates="vat")
-    order_provider_vat = relationship("OrderRW_Provider", back_populates="vat")
 
     def __repr__(self):
         return f"'{self.name}'"

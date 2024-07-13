@@ -42,7 +42,7 @@ async def read_wagon_type(wagon_type_id: int, db: AsyncSession = Depends(get_db)
         raise HTTPException(status_code=500, detail=f"Failed to read VAT: {str(e)}")
 
 
-# Создание новой или обновление существующей
+# Создание новой Род ПС или обновление существующей
 @router.post("/", response_model=WagonTypeInDBBase)
 async def create_or_update_wagon_type(wagon_type: WagonTypeCreate, db: AsyncSession = Depends(get_db)):
     try:
@@ -57,7 +57,7 @@ async def create_or_update_wagon_type(wagon_type: WagonTypeCreate, db: AsyncSess
         raise HTTPException(status_code=500, detail=f"Failed to create or update VAT: {str(e)}")
 
 
-# Удаление по идентификатору
+# Удаление Род ПС по идентификатору
 @router.delete("/{wagon_type_id}", response_model=WagonTypeInDBBase)
 async def delete_wagon_type(wagon_type_id: int, db: AsyncSession = Depends(get_db)):
     try:
@@ -76,7 +76,7 @@ async def delete_wagon_type(wagon_type_id: int, db: AsyncSession = Depends(get_d
         raise HTTPException(status_code=500, detail=f"Failed to delete wagon_type: {str(e)}")
 
 
-# Частичное обновление
+# Частичное обновление Род ПС
 @router.patch("/{wagon_type_id}", response_model=WagonTypeInDBBase)
 async def update_wagon_type(wagon_type_id: int, wagon_type_update: WagonTypeUpdate, db: AsyncSession = Depends(get_db)):
     try:
