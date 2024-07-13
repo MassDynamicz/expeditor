@@ -16,8 +16,6 @@ class WagonType(Base):
 
     wagons = relationship("Wagon", back_populates="wagon_type")
     containers = relationship("Container", back_populates="wagon_type")
-    orderrw_routes = relationship("OrderRW_Route", back_populates="wagon_type")
-    transport_wagon_type = relationship("OrderRW_Transport", back_populates="wagon_type")
 
     def __repr__(self):
         return f"'{self.name}'"

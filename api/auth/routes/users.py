@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
+from config.db import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import delete
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
-from config.db import get_db
 from api.auth.models import User, Role, UserSession
-from api.auth.routes.roles import get_role
 from api.auth.schemas import UserCreate, UserUpdate,UserDelete, User as UserSchema
+from api.auth.routes.roles import get_role
+from api.auth.routes.auth import role_required, user_status, get_current_user
 from config.utils import get_password_hash
 from datetime import datetime
 from typing import List, Dict
@@ -54,13 +55,13 @@ async def load_user_relations(user: User, db: AsyncSession):
 
 # Создание пользователя
 @router.post("/", response_model=List[UserSchema])
-async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
+async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db), current_user: User = role_required(["admin"])):
     try:
         # Проверяем, существует ли пользователь с таким username или email
         result = await db.execute(select(User).filter((User.username == user.username) | (User.email == user.email)))
-        existing_user = result.scalars().first()
+        current_user = result.scalars().first()
         
-        if existing_user:
+        if current_user:
             raise HTTPException(status_code=400, detail="Пользователь существует")
 
         # Создаем нового пользователя
@@ -97,7 +98,7 @@ async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
 
 # Список пользователей
 @router.get("/", response_model=List[UserSchema])
-async def get_users(db: AsyncSession = Depends(get_db)):
+async def get_users(db: AsyncSession = Depends(get_db), current_user: User = role_required(["admin", "guest"])):
     try:
         result = await db.execute(
             select(User)
@@ -112,7 +113,7 @@ async def get_users(db: AsyncSession = Depends(get_db)):
     
 # Данные пользователя
 @router.get("/{user_id}", response_model=UserSchema)
-async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
+async def get_user(user_id: int, db: AsyncSession = Depends(get_db),  current_user: User = role_required(["admin"])):
     try:
         result = await db.execute(
             select(User)
@@ -129,8 +130,9 @@ async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Обновить данные пользователя
 @router.patch("/{user_id}", response_model=UserSchema)
-async def update_user(user_id: int, user: UserUpdate, db: AsyncSession = Depends(get_db)):
+async def update_user(user_id: int, user: UserUpdate, db: AsyncSession = Depends(get_db),  current_user: User = role_required(["admin"])):
     try:
         # Fetch the user
         result = await db.execute(select(User).options(selectinload(User.role), selectinload(User.sessions)).filter(User.id == user_id))
@@ -142,12 +144,12 @@ async def update_user(user_id: int, user: UserUpdate, db: AsyncSession = Depends
         if user.username:
             existing_user = await db.execute(select(User).filter(User.username == user.username, User.id != user_id))
             if existing_user.scalars().first():
-                raise HTTPException(status_code=400, detail="Указанный username используется в системе")
+                raise HTTPException(status_code=400, detail="Указанное имя пользователя уже существует")
 
         if user.email:
             existing_user = await db.execute(select(User).filter(User.email == user.email, User.id != user_id))
             if existing_user.scalars().first():
-                raise HTTPException(status_code=400, detail="Указанный email используется в системе")
+                raise HTTPException(status_code=400, detail="Указанный адрес электронной почты уже существует")
 
         # Prepare update data
         update_data = user.dict(exclude_unset=True)
@@ -167,24 +169,24 @@ async def update_user(user_id: int, user: UserUpdate, db: AsyncSession = Depends
 
     except IntegrityError as e:
         await db.rollback()
-        raise HTTPException(status_code=400, detail="A user with this email or username already exists.")
+        raise HTTPException(status_code=400, detail="Пользователь с таким именем или email уже существует")
     except Exception as e:
         await db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
     
 # Удалить пользователя
 @router.delete("/{user_id}", response_model=UserDelete)
-async def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_user(user_id: int, db: AsyncSession = Depends(get_db),  current_user: User = role_required(["admin"])):
     # Проверка, является ли пользователь первичным
     if user_id == 1:
-        raise HTTPException(status_code=403, detail="Нельзя удалить первичного пользователя.")
+        raise HTTPException(status_code=403, detail="Нельзя удалить первичного пользователя")
     
     # Получение пользователя для проверки существования
     result = await db.execute(select(User).filter(User.id == user_id))
     user = result.scalar_one_or_none()
     
     if not user:
-        raise HTTPException(status_code=404, detail=f"Пользователь с ID {user_id} не найден.")
+        raise HTTPException(status_code=404, detail=f"Пользователь с ID {user_id} не найден")
     
     # Сохранение данных пользователя перед удалением
     user_data = UserSchema.from_orm(user)
@@ -196,4 +198,4 @@ async def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
     await db.execute(delete(User).where(User.id == user_id))
     await db.commit()
     
-    return UserDelete(detail=f"Пользователь ID {user_id} - {user.username} успешно удален.", user=user_data)
+    return UserDelete(detail=f"Пользователь ID {user_id} - {user.username} успешно удален", user=user_data)

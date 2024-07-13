@@ -17,7 +17,6 @@ class Currency(Base):
     bank_accounts = relationship("BankAccount", back_populates="currency")
     bank_accounts_org = relationship("BankAccountOrg", back_populates="currency")
     contracts = relationship("Contract", back_populates="currency")
-    order_provider_currency = relationship("OrderRW_Provider", back_populates="currency")
 
     def __repr__(self):
         return f"'{self.name}'"

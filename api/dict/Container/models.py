@@ -13,7 +13,6 @@ class Container(Base):
     wagon_type = relationship("WagonType", back_populates="containers")
 
     dislocation_container = relationship("Dislocation", back_populates="container")
-    transport_containers = relationship("OrderRW_Transport", back_populates="container")
 
     def __repr__(self):
         return f"'{self.name}'"

@@ -27,32 +27,16 @@ class User(Base):
     is_active = Column(Boolean, default=True, nullable=False)
     is_verified = Column(Boolean, default=False, nullable=False)
 
-    orders_rw_author = relationship("OrderRW", back_populates="author",
-                                            foreign_keys='OrderRW.author_id')
-    orders_rw_manager = relationship("OrderRW", back_populates="manager",
-                                            foreign_keys='OrderRW.manager_id')
+    # orders_rw_author = relationship("OrderRW", back_populates="author",foreign_keys='OrderRW.author_id')
+    # orders_rw_manager = relationship("OrderRW", back_populates="manager",foreign_keys='OrderRW.manager_id')
 
 
-    @property
-    def role_name(self):
-        return self.role.name if self.role else None
-
-    @property
-    def formatted_created_at(self) -> str:
-        return format_date(self.created_at)
-
-    @property
-    def formatted_updated_at(self) -> str:
-        return format_date(self.updated_at)
-
-    def __repr__(self):
-        return f"<User(username={self.username}, email={self.email}, role_id={self.role_id})>"
 
 class UserSession(Base):
     __tablename__ = "user_sessions"
 
     id = Column(Integer, primary_key=True, index=True)
-    refresh_token = Column(String(255), nullable=False, unique=True)
+    refresh_token = Column(String(255), nullable=True, unique=True)
     session_start = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     session_end = Column(DateTime(timezone=True), nullable=True)
     traffic = Column(Integer, default=0)
@@ -61,16 +45,6 @@ class UserSession(Base):
     ip_address = Column(String(45), nullable=True)
     device_info = Column(String(255), nullable=True)
 
-    @property
-    def formatted_session_start(self) -> str:
-        return format_date(self.session_start)
-
-    @property
-    def formatted_session_end(self) -> str:
-        return format_date(self.session_end) if self.session_end else None
-
-    def __repr__(self):
-        return f"<UserSession(user_id={self.user_id}, refresh_token={self.refresh_token})>"
 
 class Role(Base):
     __tablename__ = "roles"
@@ -80,5 +54,3 @@ class Role(Base):
     description = Column(String(255), nullable=True)
     users = relationship("User", back_populates="role")
 
-    def __repr__(self):
-        return f"<Role(name={self.name})>"

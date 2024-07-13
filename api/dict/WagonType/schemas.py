@@ -2,6 +2,7 @@ from pydantic import BaseModel, conint, Field
 from typing import Optional
 
 
+# region Схема НДС
 class WagonTypeBase(BaseModel):
     name: str
     code: Optional[str] = ""
@@ -35,3 +36,4 @@ class WagonType(WagonTypeInDBBase):
 
 class WagonTypeInDB(WagonTypeInDBBase):
     pass
+# endregion

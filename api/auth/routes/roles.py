@@ -8,6 +8,7 @@ from config.db import get_db
 from api.auth.models import Role, User, UserSession
 from api.auth.routes.session import end_user_session
 from api.auth.schemas import RoleCreate
+from api.auth.routes.auth import role_required, user_status, get_current_user
 from typing import List, Dict
 from datetime import datetime
 
@@ -18,21 +19,32 @@ async def get_role(db: AsyncSession, role_name: str = "user") -> Role:
     result = await db.execute(select(Role).filter_by(name=role_name))
     role = result.scalars().first()
 
-    # Если роли не определены, создаем "admin" при первой записи
+    # Если роли не определены, создаем "admin", "user" и "guest" при первой записи
     if not role:
         first_role = await db.execute(select(Role))
         if first_role.scalars().first() is None:
-            role = Role(name="admin", description="Администратор")
+            roles_to_create = [
+                {"name": "admin", "description": "Администратор"},
+                {"name": "user", "description": "Пользователь"},
+                {"name": "guest", "description": "Гость"}
+            ]
+            for role_data in roles_to_create:
+                new_role = Role(**role_data)
+                db.add(new_role)
+            await db.commit()
+            # Возвращаем роль "admin" для первого пользователя
+            role = await db.execute(select(Role).filter_by(name="admin"))
+            role = role.scalars().first()
         else:
             role = Role(name=role_name, description="Пользователь")
-        db.add(role)
-        await db.commit()
-        await db.refresh(role)
+            db.add(role)
+            await db.commit()
+            await db.refresh(role)
 
     return role
 
 @router.post("/", response_model=RoleCreate)
-async def create_role(role: RoleCreate, db: AsyncSession = Depends(get_db)):
+async def create_role(role: RoleCreate, db: AsyncSession = Depends(get_db), current_user: User = role_required(["admin"])):
     existing_role = await db.execute(select(Role).filter_by(name=role.name))
     if existing_role.scalars().first():
         raise HTTPException(status_code=400, detail="Роль уже существует")
@@ -49,13 +61,13 @@ async def create_role(role: RoleCreate, db: AsyncSession = Depends(get_db)):
     return new_role
 
 @router.get("/", response_model=List[RoleCreate])
-async def read_roles(skip: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)):
+async def read_roles(skip: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db), current_user: User = role_required(["admin"])):
     result = await db.execute(select(Role).offset(skip).limit(limit))
     roles = result.scalars().all()
     return roles
 
 @router.get("/{role_id}", response_model=RoleCreate)
-async def read_role(role_id: int, db: AsyncSession = Depends(get_db)):
+async def read_role(role_id: int, db: AsyncSession = Depends(get_db), current_user: User = role_required(["admin"])):
     result = await db.execute(select(Role).filter_by(id=role_id))
     role = result.scalars().first()
     
@@ -65,7 +77,7 @@ async def read_role(role_id: int, db: AsyncSession = Depends(get_db)):
     return role
 
 @router.delete("/{role_id}", response_model=Dict[str, str])
-async def delete_role(role_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_role(role_id: int, db: AsyncSession = Depends(get_db), current_user: User = role_required(["admin"])):
     try:
         # Предварительная загрузка данных
         role_result = await db.execute(
@@ -112,11 +124,8 @@ async def delete_role(role_id: int, db: AsyncSession = Depends(get_db)):
                 await db.commit()
 
         # Создание сообщения с информацией о перемещенных пользователях
-        user_ids = [user.id for user in users]
-        user_count = len(user_ids)
         detail_message = (
-            f"Роль с ID {role_id} успешно удалена. Пользователи с ID {user_ids} "
-            f"({user_count} пользователей) перемещены в гостевую роль и их сессии завершены."
+            f"Роль с ID {role_id} успешно удалена. Пользователи перемещены в гостевую роль, сессии завершены"
         )
 
         return {"detail": detail_message}

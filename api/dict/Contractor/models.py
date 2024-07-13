@@ -27,8 +27,6 @@ class Contractor(Base):
     contracts = relationship("Contract", back_populates="contractor")
     bank_accounts = relationship("BankAccount", back_populates="owner")
     orders_rw = relationship("OrderRW", back_populates="client")
-    rw_codes = relationship("RWCode", back_populates="owner")
-    order_provider_provider = relationship("OrderRW_Provider", back_populates="provider")
 
     def __repr__(self):
         return f"'{self.name}'"

@@ -14,7 +14,5 @@ class Operation(Base):
     vat_id = Column(Integer, ForeignKey('vat.id'), default=0)
     vat = relationship("Vat", back_populates="operations")
 
-    order_provider_operation = relationship("OrderRW_Provider", back_populates="operation")
-
     def __repr__(self):
         return f"'{self.name}'"
