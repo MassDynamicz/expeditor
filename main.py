@@ -7,7 +7,6 @@ from config.settings import app, templates
 from config.db import get_db
 
 
-# first
 @app.post("/1c", tags=["Импорт данных"])
 async def post_1c(request: Request, db: AsyncSession = Depends(get_db)):
     return await receive_json_1c(request, db)
