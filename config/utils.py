@@ -11,19 +11,18 @@ def get_password_hash(password):
 
 # форматирование даты
 from datetime import datetime
-def getDate(dt: datetime, fmt: str = "%Y-%m-%d %H:%M:%S") -> str:
-    return dt.strftime(fmt)
-
-# Cоздание токена авторизации
-from datetime import timedelta
-from jose import jwt
-from config.settings import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
-def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+def format_date(date_str):
+    if date_str == '' or not isinstance(date_str, str):
+        return None
+    date_formats = [
+        "%d.%m.%Y",  # формат "01.06.2024"
+        "%Y-%m-%d %H:%M:%S",  # формат "2024-06-01 07:45:00"
+        "%d.%m.%Y, %H:%M",  # формат "09.06.2024, 04:17"
+        "%d.%m.%Y, %H:%M:%S"  # формат "17.06.2024, 20:57:38"
+    ]
+    for date_format in date_formats:
+        try:
+            return datetime.strptime(date_str, date_format)
+        except ValueError:
+            continue
+    raise ValueError(f"Невозможно распознать формат даты: {date_str}")

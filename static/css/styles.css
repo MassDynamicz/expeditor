@@ -74,3 +74,8 @@ body {
 }
 
 
+.swagger-ui .info {
+  margin: 0;
+  position: absolute;
+  top: 1em;
+}
