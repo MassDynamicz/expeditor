@@ -20,7 +20,6 @@ class Contract(Base):
     organization = relationship("Organization", back_populates="contracts")
     contractor = relationship("Contractor", back_populates="contracts")
     currency = relationship("Currency", back_populates="contracts")
-    orders_rw = relationship("OrderRW", back_populates="contract")
 
     def __repr__(self):
         return f"'{self.name}'"

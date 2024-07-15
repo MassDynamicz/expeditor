@@ -1,5 +1,4 @@
-import enum
-from sqlalchemy import Column, Integer, String, Boolean, Date, ForeignKey, Numeric, Enum
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from api.dict.OwnerType.models import OwnerType
 from config.db import Base
@@ -26,7 +25,7 @@ class Contractor(Base):
     country = relationship("Country", back_populates="contractors")
     contracts = relationship("Contract", back_populates="contractor")
     bank_accounts = relationship("BankAccount", back_populates="owner")
-    orders_rw = relationship("OrderRW", back_populates="client")
+    rail_way_codes = relationship("RailWayCode", back_populates="owner")
 
     def __repr__(self):
         return f"'{self.name}'"
