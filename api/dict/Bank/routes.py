@@ -22,7 +22,6 @@ async def read_banks(skip: int = 0, limit: int = 10, db: AsyncSession = Depends(
         banks = result.scalars().all()
         return [BankInDBBase.from_orm(bank) for bank in banks]
     except Exception as e:
-        print(f"Ошибка чтения банков: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to read bank: {str(e)}")
 
 
