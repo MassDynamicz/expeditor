@@ -24,7 +24,6 @@ class Organization(Base):
     country = relationship("Country", lazy='joined')
     contracts = relationship("Contract", back_populates="organization")
     bank_accounts_org = relationship("BankAccountOrg", back_populates="owner")
-    orders_rw = relationship("OrderRW", back_populates="organization")
 
     def __repr__(self):
         return f"'{self.name}'"

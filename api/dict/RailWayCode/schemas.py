@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 
 # region Ж\Д код
-class RWCodeBase(BaseModel):
+class RailWayCodeBase(BaseModel):
     name: str
     code: str
     owner_id: int
@@ -12,11 +12,11 @@ class RWCodeBase(BaseModel):
         from_attributes = True
 
 
-class RWCodeCreate(RWCodeBase):
+class RailWayCodeCreate(RailWayCodeBase):
     pass
 
 
-class RWCodeUpdate(BaseModel):
+class RailWayCodeUpdate(BaseModel):
     name: str
     code: str
     owner_id: int
@@ -26,17 +26,17 @@ class RWCodeUpdate(BaseModel):
         from_attributes = True
 
 
-class RWCodeInDBBase(RWCodeBase):
+class RailWayCodeInDBBase(RailWayCodeBase):
     id: int
 
     class Config:
         from_attributes = True
 
 
-class RWCode(RWCodeInDBBase):
+class RailWayCode(RailWayCodeInDBBase):
     pass
 
 
-class RWCodeInDB(RWCodeInDBBase):
+class RailWayCodeInDB(RailWayCodeInDBBase):
     pass
 # endregion

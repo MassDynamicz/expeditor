@@ -12,6 +12,7 @@ class Territory(Base):
     code = Column(String(10), nullable=False)
 
     stations = relationship("Station", back_populates="territory")
+    rail_way_codes = relationship("RailWayCode", back_populates="territory")
 
     def __repr__(self):
         return f"'{self.name}'"

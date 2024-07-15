@@ -11,7 +11,5 @@ class ServiceType(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(200), nullable=False)
 
-    orders_rw = relationship("OrderRW", back_populates="service_type")
-
     def __repr__(self):
         return f"'{self.name}'"
