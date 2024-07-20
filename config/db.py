@@ -7,8 +7,12 @@ import os
 from dotenv import load_dotenv
 load_dotenv(dotenv_path='config/.env')
 
-# Параметры подключения из переменных окружения
+# Использование DB_URL из переменных окружения
 DB_URL = os.getenv("DB_URL")
+
+# Добавляем параметр sslmode=require, если его нет в строке подключения
+if "sslmode" not in DB_URL:
+    DB_URL += "?sslmode=require"
 
 # Асинхронное подключение к бд
 engine = create_async_engine(DB_URL, echo=True)
