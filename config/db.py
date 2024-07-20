@@ -12,7 +12,7 @@ DB_URL = os.getenv("DB_URL")
 
 # Если строка подключения содержит PostgreSQL, добавляем sslmode=require
 if DB_URL and DB_URL.startswith("postgresql+asyncpg://"):
-    DB_URL = DB_URL.replace("postgresql+asyncpg://", "postgresql+asyncpg://", 1) + "?ssl=true"
+    DB_URL += "?sslmode=require"
 
 # Асинхронное подключение к бд
 engine = create_async_engine(DB_URL, echo=True)
