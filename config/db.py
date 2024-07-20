@@ -7,15 +7,11 @@ import os
 from dotenv import load_dotenv
 load_dotenv(dotenv_path='config/.env')
 
-# Использование DB_URL из переменных окружения
-DB_URL = os.getenv("DB_URL")
-
-# Если строка подключения содержит PostgreSQL, добавляем sslmode=require
-if DB_URL and DB_URL.startswith("postgresql+asyncpg://"):
-    DB_URL += "?sslmode=require"
+# Использование DATABASE_URL из переменных окружения
+DATABASE_URL = os.getenv("DB_URL")
 
 # Асинхронное подключение к бд
-engine = create_async_engine(DB_URL, echo=True)
+engine = create_async_engine(DATABASE_URL, echo=True)
 async_session = sessionmaker(
     autocommit=False,
     autoflush=False,
