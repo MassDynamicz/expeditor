@@ -1,10 +1,9 @@
 from sqlalchemy import (
-    Column, Integer, String, Boolean, DateTime, ForeignKey, BigInteger
+    Column, Integer, String, Boolean, DateTime, ForeignKey
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from config.db import Base
-from config.utils import format_date
 
 
 class User(Base):
@@ -26,10 +25,6 @@ class User(Base):
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
     is_active = Column(Boolean, default=True, nullable=False)
     is_verified = Column(Boolean, default=False, nullable=False)
-
-    # orders_rw_author = relationship("OrderRW", back_populates="author",foreign_keys='OrderRW.author_id')
-    # orders_rw_manager = relationship("OrderRW", back_populates="manager",foreign_keys='OrderRW.manager_id')
-
 
 
 class UserSession(Base):

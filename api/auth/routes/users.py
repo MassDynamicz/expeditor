@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from api.auth.models import User, Role, UserSession
 from api.auth.schemas import UserCreate, UserUpdate,UserDelete, User as UserSchema
 from api.auth.routes.roles import get_role
-from api.auth.routes.auth import role_required, user_status, get_current_user
+from api.auth.routes.auth import role_required
 from config.utils import get_password_hash
 from datetime import datetime
 from typing import List, Dict

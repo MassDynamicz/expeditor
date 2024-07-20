@@ -1,5 +1,4 @@
-import os
-import importlib
+import os, importlib
 from fastapi import FastAPI, APIRouter
 
 # Словарь для сопоставления имен файлов с тегами

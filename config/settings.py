@@ -3,6 +3,10 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.base import BaseHTTPMiddleware
+from config.db import async_session
+from config.middleware import db_session_middleware, add_cors_middleware
+from config.router import get_routers
+from api.auth.routes.users import create_initial_user
 
 # Добавьте корневую директорию проекта в путь поиска модулей
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -10,21 +14,12 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Папка с шаблонами
 templates = Jinja2Templates(directory="templates")
 
-# Импорт Middleware
-from config.middleware import db_session_middleware, add_cors_middleware
-from api.auth.routes.users import create_initial_user
-from config.db import async_session
-from config.router import get_routers
-
-
 def create_app() -> FastAPI:
     app = FastAPI(
+        redoc_url=None,
         title="Expeditor",
-        swagger_ui_parameters={
-            "docExpansion": "none",  # сворачиваем вкладки по умолчанию
-            "displayRequestDuration": True,
-            "filter": True,
-        },
+        description="Проект представляет собой асинхронное веб-приложение, созданное с использованием фреймворка FastAPI и SQLAlchemy для работы с базой данных.",
+        swagger_ui_parameters={"docExpansion": "none","displayRequestDuration": True,"filter": True},
     )
 
     # Подключение CORS middleware
@@ -41,20 +36,21 @@ def create_app() -> FastAPI:
     async def not_found_exception_handler(request: Request, exc: HTTPException):
         return templates.TemplateResponse(
             "layouts/errors.html",
-            {"request": request, "status_code": 404, "message": "Страница не найдена"},
+            {"request": request, "status_code": 404,
+                "message": "Страница не найдена"},
             status_code=404,
         )
 
-    # Вызов асинхронной функции для создания первичного пользователя
+    # Запуск приложения
     @app.on_event("startup")
     async def startup_event():
         async with async_session() as session:
+            # создание первичного пользователя
             await create_initial_user(session)
 
     # Подключение роутеров
     get_routers(app)
 
     return app
-
 
 app = create_app()

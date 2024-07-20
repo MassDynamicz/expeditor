@@ -1,21 +1,11 @@
-
-from config.db import async_session, get_db
+from config.db import async_session
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from starlette.requests import Request
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-import logging
-from jose import jwt, JWTError
-from api.auth.models import User, UserSession
-from api.auth.routes.token import update_tokens, set_tokens_cookie, SECRET_KEY, ALGORITHM
-from api.auth.routes.session import end_user_session
-
-# Настройка логирования
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
+from api.auth.models import UserSession
+from sqlalchemy.ext.asyncio import AsyncSession
 # CORS origins
 origins = [
     "http://localhost:8000",
@@ -38,63 +28,36 @@ async def db_session_middleware(request: Request, call_next):
     async with async_session() as session:
         request.state.db = session
 
-        # Check and update tokens if necessary
-        auth_header = request.headers.get('Authorization')
-        refresh_token = request.cookies.get("refresh_token")
-
-        if auth_header:
-            token_type, token = auth_header.split()
-            if token_type.lower() == 'bearer':
-                try:
-                    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-                except JWTError:
-                    if refresh_token:
-                        try:
-                            payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
-                            new_access_token, new_refresh_token = update_tokens(refresh_token)
-                            logger.info(f"Access token обновлен для пользователя {payload.get('username')}")
-                            response = await call_next(request)
-                            response.headers["Authorization"] = f"Bearer {new_access_token}"
-                            set_tokens_cookie(response, new_refresh_token)
-                            return response
-                        except JWTError:
-                            # Refresh token is invalid or expired
-                            await end_user_session(payload.get("user_id"), session)
-                            logger.info(f"Refresh token истек для пользователя {payload.get('username')}")
-                            response = JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"detail": "Refresh token истек"})
-                            response.delete_cookie("refresh_token")
-                            return response
-
-        elif refresh_token:
-            try:
-                payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
-            except JWTError:
-                # Refresh token is invalid or expired
-                await end_user_session(payload.get("user_id"), session)
-                logger.info(f"Refresh token истек для пользователя {payload.get('username')}")
-                response = JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"detail": "Refresh token истек"})
-                response.delete_cookie("refresh_token")
-                return response
-
-        response = await call_next(request)
-
-        # Traffic tracking
-        token = request.headers.get("authorization")
-        if token:
-            token = token.split(" ")[1]
-
-            result = await session.execute(select(UserSession).filter(UserSession.refresh_token == token, UserSession.session_end == None))
-            user_session = result.scalars().first()
-
-            if user_session:
-                content_length = request.headers.get("Content-Length")
-                if content_length:
-                    traffic = int(content_length)
-                else:
-                    body = await request.body()
-                    traffic = len(body)
-
-                user_session.traffic += traffic
-                await session.commit()
+        try:
+            response = await call_next(request)
+            await track_traffic(request, session)
+        except HTTPException as e:
+            return JSONResponse(status_code=e.status_code, content={"detail": e.detail})
 
     return response
+
+async def track_traffic(request: Request, session: AsyncSession):
+    token = get_token_from_request(request)
+    if token:
+        user_session = await get_user_session_by_token(session, token)
+        if user_session:
+            traffic = await calculate_traffic(request)
+            user_session.traffic += traffic
+            await session.commit()
+
+def get_token_from_request(request: Request):
+    auth_header = request.headers.get("authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        return auth_header.split(" ")[1]
+    return None
+
+async def get_user_session_by_token(session: AsyncSession, token: str):
+    result = await session.execute(select(UserSession).filter(UserSession.refresh_token == token, UserSession.session_end == None))
+    return result.scalars().first()
+
+async def calculate_traffic(request: Request):
+    content_length = request.headers.get("Content-Length")
+    if content_length:
+        return int(content_length)
+    body = await request.body()
+    return len(body)
