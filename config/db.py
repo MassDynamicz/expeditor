@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv(dotenv_path='config/.env')
 
 # Использование DATABASE_URL из переменных окружения
-DATABASE_URL = os.getenv("DB_URL")
+DATABASE_URL=os.getenv('DB_URL')
 
 # Асинхронное подключение к бд
 engine = create_async_engine(DATABASE_URL, echo=True)
@@ -24,3 +24,4 @@ Base = declarative_base()
 async def get_db():
     async with async_session() as session:
         yield session
+        

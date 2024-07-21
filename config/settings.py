@@ -1,5 +1,6 @@
 import sys, os
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, status
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -16,6 +17,7 @@ templates = Jinja2Templates(directory="templates")
 
 def create_app() -> FastAPI:
     app = FastAPI(
+        docs_url="/docs",
         redoc_url=None,
         title="Expeditor",
         description="Проект представляет собой асинхронное веб-приложение, созданное с использованием фреймворка FastAPI и SQLAlchemy для работы с базой данных.",
@@ -40,7 +42,19 @@ def create_app() -> FastAPI:
                 "message": "Страница не найдена"},
             status_code=404,
         )
-
+        
+    # Обработчик для ошибки 403
+    @app.exception_handler(HTTPException)
+    async def custom_http_exception_handler(request: Request, exc: HTTPException):
+        if exc.status_code == status.HTTP_403_FORBIDDEN:
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={"detail": "Доступ запрещен"},
+            )
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.detail},
+        )
     # Запуск приложения
     @app.on_event("startup")
     async def startup_event():

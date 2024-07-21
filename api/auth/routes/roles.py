@@ -5,12 +5,12 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import delete, update
 from config.db import get_db
-from api.auth.models import Role, User, UserSession
+from api.auth.models import Role, User
 from api.auth.routes.session import end_user_session
 from api.auth.schemas import RoleCreate
-from api.auth.routes.auth import role_required, user_status, get_current_user
+from api.auth.routes.auth import role_required
 from typing import List, Dict
-from datetime import datetime
+
 
 router = APIRouter()
 

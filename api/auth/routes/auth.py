@@ -11,9 +11,10 @@ from config.db import get_db
 from config.utils import verify_password
 from api.auth.models import User
 from api.auth.schemas import User as UserSchema, UserUpdate, Token
-from api.auth.routes.token import create_access_token, create_refresh_token, clear_cookies, check_access_token, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
-from api.auth.routes.session import start_user_session, end_user_session
-
+from api.auth.routes.token import create_access_token, create_refresh_token, update_access_token, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+from api.auth.routes.session import start_user_session, end_user_session, get_current_session
+from api.auth.schemas import UserSession as UserSessionSchema
+from datetime import timedelta
 bearer_scheme = HTTPBearer()
 router = APIRouter()
 
@@ -25,6 +26,10 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(b
         detail="Не авторизован",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    forbidden_exception = HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Доступ запрещен",
+    )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("username")
@@ -35,8 +40,13 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(b
         raise credentials_exception
     result = await db.execute(select(User).filter(User.username == username))
     user = result.scalars().first()
+    
     if user is None:
         raise credentials_exception
+    
+    if token is None:
+        raise forbidden_exception
+    
     return user
 
 # Статус текущего пользователя
@@ -74,8 +84,7 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
     user = await verify_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Имя пользователя или пароль указаны не верно")
-    
-           
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data={"username": user.username, "user_id": user.id, "role": user.role_id}, expires_delta=access_token_expires)
     refresh_token = create_refresh_token(data={"username": user.username, "user_id": user.id, "role": user.role_id})
@@ -91,12 +100,8 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
 
     await start_user_session(user.id, refresh_token, client_host, user_agent, traffic, db)
 
-    response = JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "Успешная авторизация"})
-    
-    response.set_cookie(key="access_token", value=access_token, httponly=True, secure=True, samesite='None')
-    
+    response = JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "Успешная авторизация", "access_token": access_token})
     return response
-
 
 # Профиль пользователя
 @router.get("/profile", response_model=UserSchema)
@@ -131,18 +136,45 @@ async def update_user_profile(user_update: UserUpdate, db: AsyncSession = Depend
 
     return user
 
-# Удалить куки
-@router.get("/clear-cookies")
-async def clear_cookies_route(request: Request, response: Response):
-    cookies_before = request.cookies
-    clear_cookies(response)
-    cookies_after = response.headers.getlist('set-cookie')
-    response_data = {
-        "detail": "Куки удалены",
-        "cookies_before": cookies_before,
-        "cookies_after": cookies_after
-    }
-    return JSONResponse(response_data)
+# Текущая сессия
+@router.get("/session")
+async def get_session(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    session = await get_current_session(current_user.id, db)
+    if session:
+        return {
+            "id": session.id,
+            "user_id": session.user_id,
+            "session_start": session.session_start,
+            "session_end": session.session_end,
+            "traffic": session.traffic,
+            "ip_address": session.ip_address,
+            "device_info": session.device_info,
+        }
+    return {"error": "Сессия не найдена"}
+
+# Обновление токена
+@router.post("/refresh", response_model=Token)
+async def refresh_token(request: Request, response: Response, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    try:
+        # Получаем текущую сессию пользователя из базы данных
+        user_session = await get_current_session(current_user.id, db)
+        
+        if not user_session:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Необходима повторная авторизация")
+
+        refresh_token = user_session.refresh_token
+
+        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: int = payload.get("user_id")
+        if user_id != current_user.id:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Неверный токен")
+
+        return await update_access_token(current_user.id, response)
+
+    except JWTError:
+        await end_user_session(current_user.id, db)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Неверный токен")
+
 
 # Выход
 @router.post("/logout")

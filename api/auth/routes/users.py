@@ -98,7 +98,7 @@ async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db), curr
 
 # Список пользователей
 @router.get("/", response_model=List[UserSchema])
-async def get_users(db: AsyncSession = Depends(get_db), current_user: User = role_required(["admin", "guest"])):
+async def get_users(db: AsyncSession = Depends(get_db), current_user: User = role_required(["admin"])):
     try:
         result = await db.execute(
             select(User)

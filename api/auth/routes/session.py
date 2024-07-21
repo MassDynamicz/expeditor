@@ -1,10 +1,11 @@
 #api.auth.routes.session.py
-from fastapi import Response
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from datetime import datetime
 from api.auth.models import UserSession
-from api.auth.routes.cookies import clear_cookies
+
+router = APIRouter()
 
 # Получение текущей сессии по user_id
 async def get_current_session(user_id: int, db: AsyncSession):
@@ -42,5 +43,5 @@ async def end_user_session(user_id: int, db: AsyncSession, response: Response):
         session.session_end = datetime.utcnow()
         session.refresh_token = None
         await db.commit()
-    clear_cookies(response)
-    
+ 
+
