@@ -1,5 +1,6 @@
-import os, importlib, re
+import os, importlib
 from fastapi import FastAPI, APIRouter
+from config.utils import camel_to_kebab
 
 # Словарь для сопоставления имен файлов с тегами
 tag_mappings = {
@@ -17,7 +18,7 @@ tag_mappings = {
     "bankaccount": "Банковские счета контрагентов",
     "bankaccountorg": "Банковские счета организации",
     "wagontype": "Роды подвижного состава",
-    "servicetype": "Виды услуг",
+    "service-type": "Виды услуг",
     "wagon": "Вагоны",
     "container": "Контейнеры",
     "etsng": "Грузы по ЕТСНГ",
@@ -26,14 +27,12 @@ tag_mappings = {
     "territory": "Территории Ж/Д",
     "station": "Станции Ж/Д",
     "dislocation": "Дислокация",
-    "ordersrailway": "Заявки Ж/Д",
+    "orders-railway": "Заявки Ж/Д",
 }
 
 # Словарь исключений для префиксов
 prefix_exceptions = ["auth"]
-def camel_to_kebab(name):
-    # Функция для преобразования CamelCase в kebab-case
-    return re.sub(r'(?<!^)(?=[A-Z])', '-', name).lower()
+
 
 def get_routers(app: FastAPI):
     base_dir = "api"

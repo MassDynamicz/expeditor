@@ -26,3 +26,8 @@ def format_date(date_str):
         except ValueError:
             continue
     raise ValueError(f"Невозможно распознать формат даты: {date_str}")
+
+# Функция для преобразования CamelCase в kebab-case
+import re
+def camel_to_kebab(name):
+    return re.sub(r'(?<!^)(?=[A-Z])', '-', name).lower()
