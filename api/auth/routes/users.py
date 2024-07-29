@@ -7,51 +7,13 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 from api.auth.models import User, Role, UserSession
 from api.auth.schemas import UserCreate, UserUpdate,UserDelete, User as UserSchema
-from api.auth.routes.roles import get_role
-from api.auth.routes.auth import role_required
+from api.auth.controllers import get_role, role_required, load_user_relations
 from config.utils import get_password_hash
 from datetime import datetime
 from typing import List, Dict
 
 router = APIRouter()
 
-# Инициализируем первичного пользователя
-async def create_initial_user(db: AsyncSession):
-    result = await db.execute(select(User))
-    users_exist = result.scalars().first()
-    if not users_exist:
-        admin_role = await get_role(db, "admin")
-        if not admin_role:
-            print("Роль 'admin' не найдена. Создайте роль 'admin' и повторите попытку.")
-            return
-        initial_user = User(
-            username="admin",
-            first_name="",
-            last_name="",
-            email="admin@mail.com",
-            phone="",
-            address="",
-            company="",
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
-            hashed_password=get_password_hash("admin"),
-            role_id=admin_role.id,
-            is_active=True,  
-            is_verified=True  
-        )
-        db.add(initial_user)
-        await db.commit()
-        print("Пользователь-администратор создан") 
-    else:
-        print("Таблица с пользователями существует. Запуск приложения...")
-
-# Загружаем связные данные
-async def load_user_relations(user: User, db: AsyncSession):
-    user_role = await db.execute(select(Role).filter(Role.id == user.role_id))
-    user.role = user_role.scalars().first()
-    
-    user_sessions = await db.execute(select(User).options(selectinload(User.sessions)).filter(User.id == user.id))
-    user.sessions = user_sessions.scalars().first().sessions
 
 # Создание пользователя
 @router.post("/", response_model=List[UserSchema])

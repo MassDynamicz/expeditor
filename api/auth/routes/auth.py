@@ -1,82 +1,21 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordRequestForm, HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import OAuth2PasswordRequestForm,HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
 from datetime import timedelta
-from typing import List
 from jose import jwt, JWTError  
 from config.db import get_db
-from config.utils import verify_password
+from config.utils import verify_password, get_password_hash
 from api.auth.models import User
 from api.auth.schemas import User as UserSchema, UserUpdate, Token
+from api.auth.controllers import get_current_user,verify_user, start_user_session, end_user_session, get_current_session
 from api.auth.routes.token import create_access_token, create_refresh_token, update_access_token, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
-from api.auth.routes.session import start_user_session, end_user_session, get_current_session
-from api.auth.schemas import UserSession as UserSessionSchema
 from datetime import timedelta
-bearer_scheme = HTTPBearer()
+
+
+
 router = APIRouter()
-
-# Текущий пользователь
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme), db: AsyncSession = Depends(get_db)):
-    token = credentials.credentials
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Не авторизован",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    forbidden_exception = HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail="Доступ запрещен",
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("username")
-        user_id: int = payload.get("user_id")
-        if username is None or user_id is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    result = await db.execute(select(User).filter(User.username == username))
-    user = result.scalars().first()
-    
-    if user is None:
-        raise credentials_exception
-    
-    if token is None:
-        raise forbidden_exception
-    
-    return user
-
-# Статус текущего пользователя
-async def user_status(current_user: User = Depends(get_current_user)):
-    if not current_user.is_active:
-        raise HTTPException(status_code=400, detail="Неактивный пользователь")
-    return current_user
-
-# Верификация пользователя
-async def verify_user(db: AsyncSession, username: str, password: str):
-    result = await db.execute(select(User).filter(User.username == username))
-    user = result.scalars().first()
-    if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Имя пользователя не существует")
-    if not verify_password(password, user.hashed_password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Неверный пароль")
-    if not user.is_active:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Учетная запись не активна")
-    return user
-
-# Универсальная функция для проверки ролей
-def role_required(roles: List[str]):
-    async def check_roles(current_user: User = Depends(user_status), db: AsyncSession = Depends(get_db)):
-        result = await db.execute(select(User).filter(User.id == current_user.id).options(selectinload(User.role)))
-        user = result.scalars().first()
-        if not user or user.role.name not in roles:
-            raise HTTPException(status_code=403, detail="Недостаточно прав")
-        return current_user
-    
-    return Depends(check_roles)
 
 # Авторизация
 @router.post("/login", response_model=Token)
@@ -101,6 +40,7 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
     await start_user_session(user.id, refresh_token, client_host, user_agent, traffic, db)
 
     response = JSONResponse(status_code=status.HTTP_200_OK, content={"detail": "Успешная авторизация", "access_token": access_token})
+
     return response
 
 # Профиль пользователя
@@ -108,7 +48,6 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
 async def user_profile(current_user: User = Depends(get_current_user)):
     return current_user
 
-# Обновление профиля
 @router.patch("/profile", response_model=UserSchema)
 async def update_user_profile(user_update: UserUpdate, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     result = await db.execute(select(User).filter(User.id == current_user.id))
@@ -127,7 +66,12 @@ async def update_user_profile(user_update: UserUpdate, db: AsyncSession = Depend
         if existing_user.scalars().first():
             raise HTTPException(status_code=400, detail="Указанный адрес электронной почты уже существует")
 
-    update_data = user_update.dict(exclude_unset=True)
+    if user_update.password:
+        if not user_update.old_password or not verify_password(user_update.old_password, user.hashed_password):
+            raise HTTPException(status_code=400, detail="Неправильный текущий пароль")
+        user.hashed_password = get_password_hash(user_update.password)
+
+    update_data = user_update.dict(exclude_unset=True, exclude={"old_password", "password"})
     for key, value in update_data.items():
         setattr(user, key, value)
 
@@ -153,14 +97,14 @@ async def get_session(current_user: User = Depends(get_current_user), db: AsyncS
     return {"error": "Сессия не найдена"}
 
 # Обновление токена
-@router.post("/refresh", response_model=Token)
+@router.post("/token", response_model=Token)
 async def refresh_token(request: Request, response: Response, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     try:
         # Получаем текущую сессию пользователя из базы данных
         user_session = await get_current_session(current_user.id, db)
         
         if not user_session:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Необходима повторная авторизация")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Необходима авторизация")
 
         refresh_token = user_session.refresh_token
 

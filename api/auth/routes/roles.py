@@ -6,42 +6,13 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import delete, update
 from config.db import get_db
 from api.auth.models import Role, User
-from api.auth.routes.session import end_user_session
 from api.auth.schemas import RoleCreate
-from api.auth.routes.auth import role_required
+from api.auth.controllers import role_required,end_user_session
 from typing import List, Dict
 
 
 router = APIRouter()
 
-# Получаем роль
-async def get_role(db: AsyncSession, role_name: str = "user") -> Role:
-    result = await db.execute(select(Role).filter_by(name=role_name))
-    role = result.scalars().first()
-
-    # Если роли не определены, создаем "admin", "user" и "guest" при первой записи
-    if not role:
-        first_role = await db.execute(select(Role))
-        if first_role.scalars().first() is None:
-            roles_to_create = [
-                {"name": "admin", "description": "Администратор"},
-                {"name": "user", "description": "Пользователь"},
-                {"name": "guest", "description": "Гость"}
-            ]
-            for role_data in roles_to_create:
-                new_role = Role(**role_data)
-                db.add(new_role)
-            await db.commit()
-            # Возвращаем роль "admin" для первого пользователя
-            role = await db.execute(select(Role).filter_by(name="admin"))
-            role = role.scalars().first()
-        else:
-            role = Role(name=role_name, description="Пользователь")
-            db.add(role)
-            await db.commit()
-            await db.refresh(role)
-
-    return role
 
 @router.post("/", response_model=RoleCreate)
 async def create_role(role: RoleCreate, db: AsyncSession = Depends(get_db), current_user: User = role_required(["admin"])):

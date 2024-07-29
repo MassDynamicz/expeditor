@@ -5,9 +5,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.base import BaseHTTPMiddleware
 from config.db import async_session
-from config.middleware import db_session_middleware, add_cors_middleware
+from config.middleware import add_cors_middleware, db_session_middleware
 from config.router import get_routers
-from api.auth.routes.users import create_initial_user
+from api.auth.controllers import create_initial_user
 
 # Добавьте корневую директорию проекта в путь поиска модулей
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -49,12 +49,13 @@ def create_app() -> FastAPI:
         if exc.status_code == status.HTTP_403_FORBIDDEN:
             return JSONResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
-                content={"detail": "Доступ запрещен"},
+                content={"detail": "Доступ запрещен.\nНеобходима авторизация."},
             )
         return JSONResponse(
             status_code=exc.status_code,
             content={"detail": exc.detail},
         )
+        
     # Запуск приложения
     @app.on_event("startup")
     async def startup_event():

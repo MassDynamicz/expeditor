@@ -58,11 +58,14 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
     is_verified: Optional[bool] = None
     role_id: Optional[int] = None
-
+    password: Optional[str] = None  # Добавлено поле для пароля
+    old_password: Optional[str] = None  # Поле для старого пароля (для проверки)
+    
 class User(UserBase):
     id: int
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    phone: Optional[str] = None
     address: Optional[str] = None
     company: Optional[str] = None
     created_at: datetime

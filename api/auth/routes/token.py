@@ -45,7 +45,7 @@ async def check_access_token(token: str):
 async def update_access_token(user_id: int, response: Response) -> Token:
     try:
         async with async_session() as session:
-            from api.auth.routes.session import get_current_session  # Локальный импорт
+            from api.auth.controllers import get_current_session  # Локальный импорт
             user_session = await get_current_session(user_id, session)
 
             if not user_session:

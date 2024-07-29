@@ -12,6 +12,7 @@ origins = [
     "http://localhost:8080",
     "http://localhost:8081",
     "http://localhost:5173",
+    "http://192.168.88.146:5173",
 ]
 
 def add_cors_middleware(app: FastAPI):
