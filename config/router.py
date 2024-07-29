@@ -1,4 +1,4 @@
-import os, importlib
+import os, importlib, re
 from fastapi import FastAPI, APIRouter
 
 # Словарь для сопоставления имен файлов с тегами
@@ -26,12 +26,14 @@ tag_mappings = {
     "territory": "Территории Ж/Д",
     "station": "Станции Ж/Д",
     "dislocation": "Дислокация",
-    "orderrw": "Заявки Ж/Д",
+    "ordersrailway": "Заявки Ж/Д",
 }
 
 # Словарь исключений для префиксов
 prefix_exceptions = ["auth"]
-
+def camel_to_kebab(name):
+    # Функция для преобразования CamelCase в kebab-case
+    return re.sub(r'(?<!^)(?=[A-Z])', '-', name).lower()
 
 def get_routers(app: FastAPI):
     base_dir = "api"
@@ -46,11 +48,12 @@ def get_routers(app: FastAPI):
 
             if router and isinstance(router, APIRouter):
                 folder_name = os.path.basename(root)
-                if folder_name in prefix_exceptions:
+                folder_name_kebab = camel_to_kebab(folder_name)
+                if folder_name_kebab in prefix_exceptions:
                     prefix = ""
                 else:
-                    prefix = f"/{folder_name.lower()}"
-                tag = tag_mappings.get(folder_name.lower(), folder_name.replace("_", " ").title())
+                    prefix = f"/{folder_name_kebab}"
+                tag = tag_mappings.get(folder_name_kebab, folder_name.replace("_", " ").title())
                 routers.append((prefix, tag, router))
 
         if "routes" in dirs:
@@ -64,11 +67,12 @@ def get_routers(app: FastAPI):
 
                     if router and isinstance(router, APIRouter):
                         file_name = file.replace(".py", "")
-                        if file_name in prefix_exceptions:
+                        file_name_kebab = camel_to_kebab(file_name)
+                        if file_name_kebab in prefix_exceptions:
                             prefix = ""
                         else:
-                            prefix = f"/{file_name.lower()}"
-                        tag = tag_mappings.get(file_name.lower(), file_name.replace("_", " ").title())
+                            prefix = f"/{file_name_kebab}"
+                        tag = tag_mappings.get(file_name_kebab, file_name.replace("_", " ").title())
                         routers.append((prefix, tag, router))
 
     for prefix, tag, router in routers:
