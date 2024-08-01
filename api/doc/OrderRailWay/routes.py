@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from config.db import get_db
 from typing import List
-from api.doc.ordersRailway.schemas import OrderRailWayInDB, OrderRailWayBase
-from api.doc.ordersRailway.services import OrderRailWayService
+from .schemas import OrderRailWayInDB, OrderRailWayBase
+from .services import OrderRailWayService
 
 router = APIRouter()
 

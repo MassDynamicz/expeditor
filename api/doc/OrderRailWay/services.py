@@ -2,8 +2,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
 from config.db import get_db
 from sqlalchemy.future import select
-from api.doc.ordersRailway.models import OrderRailWay
-from api.doc.ordersRailway.schemas import OrderRailWayBase, OrderRailWayInDB
+from .models import OrderRailWay
+from .schemas import OrderRailWayBase, OrderRailWayInDB
 
 
 class OrderRailWayService:

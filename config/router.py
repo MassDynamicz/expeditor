@@ -27,7 +27,7 @@ tag_mappings = {
     "territory": "Территории Ж/Д",
     "station": "Станции Ж/Д",
     "dislocation": "Дислокация",
-    "orders-railway": "Заявки Ж/Д",
+    "order-rail-way": "Заявки Ж/Д",
 }
 
 # Словарь исключений для префиксов

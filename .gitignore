@@ -161,4 +161,5 @@ cython_debug/
 #.idea/
 
 .idea
-migrations/versions
+/migrations/versions/*
+!/migrations/versions/.gitkeep
