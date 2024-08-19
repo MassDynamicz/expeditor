@@ -13,5 +13,7 @@ class Operation(Base):
     code = Column(String(20), nullable=True)
     vat_id = Column(Integer, ForeignKey('vat.id'), nullable=True)
 
+    vat = relationship("Vat", backref="operations")
+
     def __repr__(self):
         return f"'{self.name}'"

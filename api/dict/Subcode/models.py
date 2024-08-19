@@ -10,5 +10,7 @@ class Subcode(Base):
     name = Column(String(200), nullable=False)
     owner_id = Column(Integer, ForeignKey('rail_way_codes.id'), nullable=False)
 
+    owner = relationship("RailWayCode", backref="subcodes")
+
     def __repr__(self):
         return f"'{self.name}'"

@@ -15,9 +15,8 @@ tag_mappings = {
     "organization": "Организация",
     "contractor": "Контрагент",
     "contract": "Договор",
-    "bankaccount": "Банковские счета контрагентов",
-    "bankaccountorg": "Банковские счета организации",
-    "wagontype": "Роды подвижного состава",
+    "bank-account": "Банковские счета",
+    "wagon-type": "Роды подвижного состава",
     "service-type": "Виды услуг",
     "wagon": "Вагоны",
     "container": "Контейнеры",
@@ -27,6 +26,8 @@ tag_mappings = {
     "territory": "Территории Ж/Д",
     "station": "Станции Ж/Д",
     "dislocation": "Дислокация",
+    "rail-way-code": "Коды Ж/Д",
+    "subcode": "Подкоды",
     "order-rail-way": "Заявки Ж/Д",
 }
 

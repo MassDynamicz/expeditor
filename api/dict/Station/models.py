@@ -14,5 +14,7 @@ class Station(Base):
     longitude = Column(String(100), default='')
     territory_id = Column(Integer, ForeignKey('territories.id'), nullable=False)
 
+    territory = relationship("Territory", backref="stations")
+
     def __repr__(self):
         return f"'{self.name}'"

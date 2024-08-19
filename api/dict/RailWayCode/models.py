@@ -13,5 +13,8 @@ class RailWayCode(Base):
     owner_id = Column(Integer, ForeignKey('contractors.id'), nullable=False)
     territory_id = Column(Integer, ForeignKey('territories.id'), nullable=False)
 
+    owner = relationship("Contractor", backref="rail_way_codes")
+    territory = relationship("Territory", backref="rail_way_codes")
+
     def __repr__(self):
         return f"'{self.name}'"

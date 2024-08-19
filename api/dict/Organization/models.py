@@ -1,7 +1,6 @@
-import enum
-from sqlalchemy import Column, Integer, String, Boolean, Date, ForeignKey, Numeric, Enum
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
-from api.dict.OwnerType.models import OwnerType
+
 from config.db import Base
 
 
@@ -17,8 +16,10 @@ class Organization(Base):
     kbe = Column(String(10), nullable=True)
     enterpreneur = Column(Boolean, default=False)
     legal_address = Column(String(300), nullable=True)
-    owner_type = Column(Enum(OwnerType), nullable=False)
+    legal_entity = Column(Boolean, default=False)
     country_id = Column(Integer, ForeignKey('countries.id'), nullable=True)
+
+    country = relationship("Country", backref="organizations")
 
     def __repr__(self):
         return f"'{self.name}'"

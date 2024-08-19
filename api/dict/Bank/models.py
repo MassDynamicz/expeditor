@@ -1,9 +1,8 @@
 from sqlalchemy import Column, Integer, String
-from sqlalchemy.orm import relationship
 from config.db import Base
 
 
-# Класс - Банк
+# Класс - Банки
 class Bank(Base):
     __tablename__ = "banks"
 

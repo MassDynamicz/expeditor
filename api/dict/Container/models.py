@@ -11,5 +11,7 @@ class Container(Base):
     name = Column(String(20), nullable=False)
     wagon_type_id = Column(Integer, ForeignKey('wagon_types.id'), nullable=True)
 
+    wagon_type = relationship("WagonType", backref="containers")
+
     def __repr__(self):
         return f"'{self.name}'"

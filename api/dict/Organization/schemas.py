@@ -1,20 +1,16 @@
 from pydantic import BaseModel
-from datetime import datetime
-from decimal import Decimal
 from typing import Optional
-
-from api.dict.OwnerType.models import OwnerType
 
 
 class OrganizationBase(BaseModel):
     name: str
     guid: Optional[str] = None
-    full_name: str
-    bin: str
-    kbe: str
+    full_name: Optional[str] = None
+    bin: Optional[str] = None
+    kbe: Optional[str] = None
     enterpreneur: bool
-    legal_address: str
-    owner_type: OwnerType
+    legal_address: Optional[str] = None
+    legal_entity: bool
     country_id: int
 
     class Config:

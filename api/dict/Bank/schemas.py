@@ -1,6 +1,4 @@
 from pydantic import BaseModel
-from datetime import datetime
-from decimal import Decimal
 from typing import Optional
 
 
@@ -19,3 +17,4 @@ class BankInDB(BankBase):
 
     class Config:
         from_attributes = True
+

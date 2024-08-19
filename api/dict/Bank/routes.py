@@ -1,29 +1,28 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from config.db import get_db
-from typing import List
 from .schemas import BankInDB, BankBase
 from .services import BankService
 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[BankInDB])
+@router.get("/")
 async def get_objs(skip: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)):
     try:
         objs = await BankService.get_list(skip, limit, db)
-        return [BankInDB.from_orm(obj) for obj in objs]
+        return objs
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read bank: {str(e)}")
 
 
-@router.get("/{obj_id}", response_model=BankInDB)
+@router.get("/{obj_id}")
 async def get_obj(obj_id: int, db: AsyncSession = Depends(get_db)):
     try:
         obj = await BankService.get_object(obj_id, db)
         if obj is None:
             raise HTTPException(status_code=404, detail="Bank not found")
-        return BankInDB.from_orm(obj)
+        return obj
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read bank: {str(e)}")
 

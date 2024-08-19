@@ -1,13 +1,12 @@
 from pydantic import BaseModel
-from datetime import datetime, date
-from decimal import Decimal
 from typing import Optional
+from datetime import date
 
 
 class ContractBase(BaseModel):
     name: str
     guid: Optional[str] = None
-    number: Optional[str] = None
+    number: str
     from_date: Optional[date] = None
     to_date: Optional[date] = None
     organization_id: int

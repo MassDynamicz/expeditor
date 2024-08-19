@@ -1,6 +1,4 @@
 from pydantic import BaseModel
-from datetime import datetime
-from decimal import Decimal
 from typing import Optional
 
 
@@ -8,6 +6,8 @@ class CurrencyBase(BaseModel):
     name: str
     guid: Optional[str] = None
     code: str
+    copybook_parameters_ru: Optional[str] = None
+    copybook_parameters_en: Optional[str] = None
 
     class Config:
         from_attributes = True

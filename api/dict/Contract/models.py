@@ -17,5 +17,9 @@ class Contract(Base):
     contractor_id = Column(Integer, ForeignKey('contractors.id'), nullable=False)
     currency_id = Column(Integer, ForeignKey('currencies.id'), nullable=False)
 
+    organization = relationship("Organization", backref="contracts")
+    contractor = relationship("Contractor", backref="contracts")
+    currency = relationship("Currency", backref="contracts")
+
     def __repr__(self):
         return f"'{self.name}'"

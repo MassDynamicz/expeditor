@@ -6,16 +6,29 @@ from .models import Bank
 from .schemas import BankBase, BankInDB
 
 
+def obj_meta(obj):
+    return {
+        "id": {"label": "ID", "value": obj.id},
+        "name": {"label": "Наименование", "value": obj.name},
+        "guid": {"label": "УИ", "value": obj.guid},
+        "bik": {"label": "БИК", "value": obj.bik},
+        "city": {"label": "Город", "value": obj.city}
+    }
+
+
 class BankService:
     async def get_list(skip: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)):
         result = await db.execute(select(Bank).offset(skip).limit(limit))
         objs = result.scalars().all()
-        return objs
+        r_object = [obj_meta(obj) for obj in objs]
+        return r_object
 
     async def get_object(obj_id: int, db: AsyncSession = Depends(get_db)):
         result = await db.execute(select(Bank).where(Bank.id == obj_id))
         obj = result.scalars().one_or_none()
-        return obj
+        if obj is None:
+            return None
+        return obj_meta(obj)
 
     async def create_object(obj_schema: BankBase, db: AsyncSession = Depends(get_db)):
         new_obj = Bank(**obj_schema.dict())
