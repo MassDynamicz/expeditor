@@ -75,5 +75,6 @@ def get_routers(app: FastAPI):
                         tag = tag_mappings.get(file_name_kebab, file_name.replace("_", " ").title())
                         routers.append((prefix, tag, router))
 
-    for prefix, tag, router in routers:
+    routers_sorted = sorted(routers, key=lambda x: x[1])
+    for prefix, tag, router in routers_sorted:
         app.include_router(router, prefix=prefix, tags=[tag])
