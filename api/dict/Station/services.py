@@ -11,7 +11,7 @@ def obj_meta(obj):
     return {
         "id": {"label": "ID", "value": obj.id},
         "name": {"label": "Наименование", "value": obj.name},
-        "code": {"label": "Код операции", "value": obj.code},
+        "code": {"label": "Код станции", "value": obj.code},
         "latitude": {"label": "Широта", "value": obj.latitude},
         "longitude": {"label": "Долгота", "value": obj.longitude},
         "territory_id": {"label": "territory_id", "value": obj.territory_id},
