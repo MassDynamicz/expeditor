@@ -29,6 +29,7 @@ tag_mappings = {
     "rail-way-code": "Коды Ж/Д",
     "subcode": "Подкоды",
     "order-rail-way": "Заявки Ж/Д",
+    "order-rail-way-route": "Заявки Ж/Д - маршруты",
 }
 
 # Словарь исключений для префиксов

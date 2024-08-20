@@ -1,10 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 from config.db import get_db
 from sqlalchemy.future import select
 from .models import OrderRailWay
 from .schemas import OrderRailWayBase, OrderRailWayInDB
+from ..OrderRailWayRoute.models import OrderRailWayRoute
 from ...dict.Contract.models import Contract
 
 
@@ -24,7 +25,8 @@ def obj_meta(obj):
         "manager": {"label": "Ответственный", "data": obj.manager},
         "client": {"label": "Клиент", "data": obj.client},
         "contract": {"label": "Договор", "data": obj.contract},
-        "service_type": {"label": "Вид услуги", "data": obj.service_type}
+        "service_type": {"label": "Вид услуги", "data": obj.service_type},
+        "order_railway_routes": {"label": "Маршруты", "data": obj.order_railway_routes if obj.order_railway_routes else None}
     }
 
 
@@ -37,6 +39,18 @@ class OrderRailWayService:
                                   .options(joinedload(OrderRailWay.client))
                                   .options(joinedload(OrderRailWay.contract).joinedload(Contract.currency))
                                   .options(joinedload(OrderRailWay.service_type))
+                                  .options(selectinload(OrderRailWay.order_railway_routes)
+                                           .joinedload(OrderRailWayRoute.vat))
+                                  .options(selectinload(OrderRailWay.order_railway_routes)
+                                           .joinedload(OrderRailWayRoute.station_otpr))
+                                  .options(selectinload(OrderRailWay.order_railway_routes)
+                                           .joinedload(OrderRailWayRoute.station_nazn))
+                                  .options(selectinload(OrderRailWay.order_railway_routes)
+                                           .joinedload(OrderRailWayRoute.wagon_type))
+                                  .options(selectinload(OrderRailWay.order_railway_routes)
+                                           .joinedload(OrderRailWayRoute.etsng))
+                                  .options(selectinload(OrderRailWay.order_railway_routes)
+                                           .joinedload(OrderRailWayRoute.gng))
                                   .offset(skip).limit(limit))
         objs = result.scalars().all()
         r_object = [obj_meta(obj) for obj in objs]
@@ -50,6 +64,18 @@ class OrderRailWayService:
                                   .options(joinedload(OrderRailWay.client))
                                   .options(joinedload(OrderRailWay.contract))
                                   .options(joinedload(OrderRailWay.service_type))
+                                  .options(selectinload(OrderRailWay.order_railway_routes)
+                                           .joinedload(OrderRailWayRoute.vat))
+                                  .options(selectinload(OrderRailWay.order_railway_routes)
+                                           .joinedload(OrderRailWayRoute.station_otpr))
+                                  .options(selectinload(OrderRailWay.order_railway_routes)
+                                           .joinedload(OrderRailWayRoute.station_nazn))
+                                  .options(selectinload(OrderRailWay.order_railway_routes)
+                                           .joinedload(OrderRailWayRoute.wagon_type))
+                                  .options(selectinload(OrderRailWay.order_railway_routes)
+                                           .joinedload(OrderRailWayRoute.etsng))
+                                  .options(selectinload(OrderRailWay.order_railway_routes)
+                                           .joinedload(OrderRailWayRoute.gng))
                                   .where(OrderRailWay.id == obj_id))
         obj = result.scalars().one_or_none()
         if obj is None:
