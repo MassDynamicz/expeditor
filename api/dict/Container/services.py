@@ -11,8 +11,7 @@ def obj_meta(obj):
     return {
         "id": {"label": "ID", "value": obj.id},
         "name": {"label": "Номер контейнера", "value": obj.name},
-        "wagon_type_id": {"label": "wagon_type_id", "value": obj.wagon_type_id},
-        "wagon_type": {"label": "Тип контейнера", "value": obj.wagon_type.name if obj.wagon_type else None}
+        "wagon_type": {"label": "Тип контейнера", "data": obj.wagon_type if obj.wagon_type else None}
     }
 
 

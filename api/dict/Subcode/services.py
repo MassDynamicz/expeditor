@@ -11,8 +11,7 @@ def obj_meta(obj):
     return {
         "id": {"label": "ID", "value": obj.id},
         "name": {"label": "Наименование", "value": obj.name},
-        "owner_id": {"label": "owner_id", "value": obj.owner_id},
-        "owner": {"label": "Владелец", "value": obj.owner.name if obj.owner else None}
+        "owner": {"label": "Владелец", "data": obj.owner if obj.owner else None}
     }
 
 

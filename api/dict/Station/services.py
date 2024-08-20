@@ -14,8 +14,7 @@ def obj_meta(obj):
         "code": {"label": "Код станции", "value": obj.code},
         "latitude": {"label": "Широта", "value": obj.latitude},
         "longitude": {"label": "Долгота", "value": obj.longitude},
-        "territory_id": {"label": "territory_id", "value": obj.territory_id},
-        "territory": {"label": "Территория", "value": obj.territory.name}
+        "territory": {"label": "Территория", "data": obj.territory}
     }
 
 

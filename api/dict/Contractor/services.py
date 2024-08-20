@@ -18,8 +18,7 @@ def obj_meta(obj):
         "enterpreneur": {"label": "Является ИП", "value": obj.enterpreneur},
         "legal_address": {"label": "Юр. адрес", "value": obj.legal_address},
         "legal_entity": {"label": "Юр. лицо", "value": obj.legal_entity},
-        "country_id": {"label": "country_id", "value": obj.country_id},
-        "country": {"label": "Страна", "value": obj.country.name}
+        "country": {"label": "Страна", "data": obj.country}
     }
 
 

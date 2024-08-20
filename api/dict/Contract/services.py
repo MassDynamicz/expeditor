@@ -15,12 +15,9 @@ def obj_meta(obj):
         "number": {"label": "Номер", "value": obj.number},
         "from_date": {"label": "Дата начала", "value": obj.from_date},
         "to_date": {"label": "Дата окончания", "value": obj.to_date},
-        "organization_id": {"label": "organization_id", "value": obj.organization_id},
-        "contractor_id": {"label": "contractor_id", "value": obj.contractor_id},
-        "currency_id": {"label": "currency_id", "value": obj.currency_id},
-        "organization": {"label": "Организация", "value": obj.organization.name},
-        "contractor": {"label": "Контрагент", "value": obj.contractor.name},
-        "currency": {"label": "Валюта взаиморасчетов", "value": obj.currency.name}
+        "organization": {"label": "Организация", "data": obj.organization},
+        "contractor": {"label": "Контрагент", "data": obj.contractor},
+        "currency": {"label": "Валюта взаиморасчетов", "data": obj.currency}
     }
 
 

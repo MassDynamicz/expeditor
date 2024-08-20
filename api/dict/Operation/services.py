@@ -12,8 +12,7 @@ def obj_meta(obj):
         "id": {"label": "ID", "value": obj.id},
         "name": {"label": "Наименование", "value": obj.name},
         "code": {"label": "Код операции", "value": obj.code},
-        "vat_id": {"label": "vat_id", "value": obj.vat_id},
-        "vat": {"label": "Ставка НДС", "value": obj.vat.name if obj.vat else None}
+        "vat": {"label": "Ставка НДС", "data": obj.vat if obj.vat else None}
     }
 
 

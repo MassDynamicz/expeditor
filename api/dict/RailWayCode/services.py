@@ -12,10 +12,8 @@ def obj_meta(obj):
         "id": {"label": "ID", "value": obj.id},
         "name": {"label": "Наименование", "value": obj.name},
         "code": {"label": "Код операции", "value": obj.code},
-        "owner_id": {"label": "owner_id", "value": obj.owner_id},
-        "territory_id": {"label": "territory_id", "value": obj.territory_id},
-        "owner": {"label": "Владелец", "value": obj.owner.name if obj.owner else None},
-        "territory": {"label": "Территория", "value": obj.territory.name if obj.territory else None}
+        "owner": {"label": "Владелец", "data": obj.owner if obj.owner else None},
+        "territory": {"label": "Территория", "data": obj.territory if obj.territory else None}
     }
 
 

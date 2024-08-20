@@ -13,14 +13,10 @@ def obj_meta(obj):
         "name": {"label": "Наименование", "value": obj.name},
         "guid": {"label": "УИ", "value": obj.guid},
         "number": {"label": "Номер счета", "value": obj.number},
-        "bank_id": {"label": "bank_id", "value": obj.bank_id},
-        "organization_id": {"label": "organization_id", "value": obj.organization_id},
-        "contractor_id": {"label": "contractor_id", "value": obj.contractor_id},
-        "currency_id": {"label": "currency_id", "value": obj.currency_id},
-        "organization": {"label": "Организация", "value": obj.organization.name if obj.organization else None},
-        "contractor": {"label": "Контрагент", "value": obj.contractor.name if obj.contractor else None},
-        "bank": {"label": "Банк>", "value": obj.bank.name},
-        "currency": {"label": "Валюта счета", "value": obj.currency.name}
+        "organization": {"label": "Организация", "data": obj.organization if obj.organization else None},
+        "contractor": {"label": "Контрагент", "data": obj.contractor if obj.contractor else None},
+        "currency": {"label": "Валюта счета", "data": obj.currency},
+        "bank": {"label": "Банк>", "data": obj.bank}
     }
 
 
