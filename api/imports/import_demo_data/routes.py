@@ -13,9 +13,12 @@ from api.dict.Currency.models import Currency
 from api.dict.Operation.models import Operation
 from api.dict.Organization.models import Organization
 from api.dict.ServiceType.models import ServiceType
+from api.dict.Station.models import Station
 from api.dict.Vat.models import Vat
 from api.dict.Wagon.models import Wagon
+from api.dict.WagonType.models import WagonType
 from api.doc.OrderRailWay.models import OrderRailWay
+from api.doc.OrderRailWayRoute.models import OrderRailWayRoute
 from config.db import get_db
 from config.utils import format_date as parse_date
 
@@ -405,6 +408,65 @@ async def load_orders(data, session):
             service_type_id=st_obj.id
         )
         session.add(new_obj)
+        session.flush()
+        obj = new_obj
+
+    for rout in data["route"]:
+        index = rout['index']
+        comment = rout['comment']
+        weight = rout['weight']
+        amount = rout['amount']
+        price = rout['price']
+        sum = rout['sum']
+        station_otpr = rout['station_otpr']
+        station_nazn = rout['station_nazn']
+        wagon_type = rout['wagon_type']
+        etsng = rout['etsng']
+        gng = rout['gng']
+        vat = rout['vat']
+
+        result_rout = await session.execute(select(OrderRailWayRoute).
+                                            filter(OrderRailWayRoute.index == index).
+                                            filter(OrderRailWayRoute.order_id == obj.id))
+        obj_rout = result_rout.scalars().first()
+
+        if not obj_rout:
+            st_otpr_result = await session.execute(select(Station).filter(Station.code == station_otpr))
+            st_otpr_obj = st_otpr_result.scalars().first()
+
+            st_nazn_result = await session.execute(select(Station).filter(Station.code == station_nazn))
+            st_nazn_obj = st_nazn_result.scalars().first()
+
+            wt_result = await session.execute(select(WagonType).filter(WagonType.name == wagon_type))
+            wt_obj = wt_result.scalars().first()
+
+            wt_result = await session.execute(select(WagonType).filter(WagonType.name == wagon_type))
+            wt_obj = wt_result.scalars().first()
+            if not wt_obj:
+                wt_result = await session.execute(select(WagonType).filter(WagonType.name == "крытый"))
+                wt_obj = wt_result.scalars().first()
+
+            vat_result = await session.execute(select(Vat).filter(Vat.guid == vat))
+            vat_obj = vat_result.scalars().first()
+
+            new_rout = OrderRailWayRoute(
+                index=index,
+                comment=comment,
+                weight=weight,
+                amount=amount,
+                price=price,
+                sum=sum,
+                order_id=obj.id,
+                station_otpr_id=st_otpr_obj.id if st_otpr_obj else None,
+                station_nazn_id=st_nazn_obj.id if st_nazn_obj else None,
+                wagon_type_id=wt_obj.id if wt_obj else None,
+                etsng_id=None,
+                gng_id=None,
+                vat_id=vat_obj.id
+            )
+            session.add(new_rout)
+            session.flush()
+
     await session.commit()
     return None
 

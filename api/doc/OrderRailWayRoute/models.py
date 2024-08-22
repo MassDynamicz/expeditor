@@ -21,8 +21,8 @@ class OrderRailWayRoute(Base):
     station_otpr_id = Column(Integer, ForeignKey('stations.id'), nullable=False)
     station_nazn_id = Column(Integer, ForeignKey('stations.id'), nullable=False)
     wagon_type_id = Column(Integer, ForeignKey('wagon_types.id'), nullable=False)
-    etsng_id = Column(Integer, ForeignKey('etsng.id'), nullable=False)
-    gng_id = Column(Integer, ForeignKey('gng.id'), nullable=False)
+    etsng_id = Column(Integer, ForeignKey('etsng.id'), nullable=True)
+    gng_id = Column(Integer, ForeignKey('gng.id'), nullable=True)
     vat_id = Column(Integer, ForeignKey('vat.id'), nullable=False)
 
     order = relationship("OrderRailWay", backref="order_railway_routes")
