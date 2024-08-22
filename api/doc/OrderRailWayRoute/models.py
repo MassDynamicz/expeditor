@@ -9,7 +9,6 @@ class OrderRailWayRoute(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     index = Column(Integer, default=0)
-    date = Column(DateTime, default=func.now())
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     comment = Column(String(300), default="")
