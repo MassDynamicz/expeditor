@@ -11,6 +11,7 @@ class OrderRailWay(Base):
     date = Column(DateTime, default=func.now())
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    number = Column(String(50), default="")
     comment = Column(String(300), default="")
     sum = Column(Numeric(15, 2), default=0)
     amount = Column(Integer, default=0)

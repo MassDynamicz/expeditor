@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
-
+import os
+import json
 from api.auth.models import User
 from api.dict.Bank.models import Bank
 from api.dict.BankAccount.models import BankAccount
@@ -18,472 +19,437 @@ from api.dict.Vat.models import Vat
 from api.dict.Wagon.models import Wagon
 from api.dict.WagonType.models import WagonType
 from api.doc.OrderRailWay.models import OrderRailWay
-from api.imports.import_dicts_for_rail_way.data_rw import load_rw_json
 from config.db import get_db
+from config.utils import format_date as parse_date
 
 
 router = APIRouter()
 
 
-async def load_currencies(session):
-    new_obj = Currency(
-        name="KZT",
-        guid=None,
-        code="398",
-        copybook_parameters_ru=None,
-        copybook_parameters_en=None
-    )
-    session.add(new_obj)
-
-    new_obj = Currency(
-        name="USD",
-        guid=None,
-        code="840",
-        copybook_parameters_ru=None,
-        copybook_parameters_en=None
-    )
-    session.add(new_obj)
-
-    new_obj = Currency(
-        name="EUR",
-        guid=None,
-        code="978",
-        copybook_parameters_ru=None,
-        copybook_parameters_en=None
-    )
-    session.add(new_obj)
-    await session.commit()
-    return None
-
-
-async def load_banks(session):
-    new_obj = Bank(
-        name="KASPI BANK",
-        guid=None,
-        bik="CASPKZKA",
-        city="Алматы"
-    )
-    session.add(new_obj)
-
-    new_obj = Bank(
-        name="Банк ЦентрКредит",
-        guid=None,
-        bik="KCJBKZKX",
-        city="Алматы"
-    )
-    session.add(new_obj)
-
-    new_obj = Bank(
-        name="Народный Банк Казахстана",
-        guid=None,
-        bik="HSBKKZKX",
-        city="Алматы"
-    )
-    session.add(new_obj)
-
-    await session.commit()
-    return None
-
-
-async def load_vat(session):
-    new_obj = Vat(
-        name="12%",
-        guid=None,
-        rate=12
-    )
-    session.add(new_obj)
-
-    new_obj = Vat(
-        name="Без НДС",
-        guid=None,
-        rate=0
-    )
-    session.add(new_obj)
-
-    new_obj = Vat(
-        name="0%",
-        guid=None,
-        rate=0
-    )
-    session.add(new_obj)
-
-    await session.commit()
-    return None
-
-
-async def load_countries(session):
-    new_obj = Country(
-        name="Казахстан",
-        guid=None,
-        full_name="Республика Казахстан",
-        code="KZ"
-    )
-    session.add(new_obj)
-
-    new_obj = Country(
-        name="Россия",
-        guid=None,
-        full_name="Российская Федерация",
-        code="RU"
-    )
-    session.add(new_obj)
-
-    new_obj = Country(
-        name="Узбекистан",
-        guid=None,
-        full_name="Республика Узбекистан",
-        code="UZ"
-    )
-    session.add(new_obj)
-
-    await session.commit()
-    return None
-
-
-async def load_organization(session):
-    result = await session.execute(select(Country))
-    country = result.scalars().first()
-
-    result = await session.execute(select(Bank))
-    bank = result.scalars().first()
-
-    result = await session.execute(select(Currency))
-    currency = result.scalars().first()
-
-    new_obj = Organization(
-        name="Airo System",
-        guid=None,
-        full_name="Товарищество с ограниченной ответственностью \"Airo System\"",
-        bin="160840016234",
-        kbe="17",
-        enterpreneur=False,
-        legal_address="Казахстан, г. Алматы, Ауэзовский район, Микрорайон 9, дом 35А, индекс 050010",
-        legal_entity=True,
-        country_id=country.id
-    )
-    session.add(new_obj)
-    await session.flush()
-
-    new_ba = BankAccount(
-        name="Расчетный счет организации",
-        guid=None,
-        number="KZ82722S000016738626",
-        currency_id=currency.id,
-        bank_id=bank.id,
-        contractor_id=None,
-        organization_id=new_obj.id
-    )
-    session.add(new_ba)
-
-    await session.commit()
-    return None
-
-
-async def load_wagons(session):
-    result = await session.execute(select(WagonType))
-    wagon_t = result.scalars().first()
-
-    new_obj = Wagon(
-        name="29005469",
-        wagon_type_id=wagon_t.id
-    )
-    session.add(new_obj)
-
-    new_obj = Wagon(
-        name="29074697",
-        wagon_type_id=wagon_t.id
-    )
-    session.add(new_obj)
-
-    new_obj = Wagon(
-        name="29146396",
-        wagon_type_id=wagon_t.id
-    )
-    session.add(new_obj)
-
-    new_obj = Wagon(
-        name="29185899",
-        wagon_type_id=wagon_t.id
-    )
-    session.add(new_obj)
-
-    new_obj = Wagon(
-        name="29226347",
-        wagon_type_id=wagon_t.id
-    )
-    session.add(new_obj)
-
-    await session.commit()
-    return None
-
-
-async def load_containers(session):
-    result = await session.execute(select(WagonType))
-    wagon_t = result.scalars().first()
-
-    new_obj = Container(
-        name="TCKU9521103",
-        wagon_type_id=wagon_t.id
-    )
-    session.add(new_obj)
-
-    new_obj = Container(
-        name="DFSU2123796",
-        wagon_type_id=wagon_t.id
-    )
-    session.add(new_obj)
-
-    new_obj = Container(
-        name="HLXU2375559",
-        wagon_type_id=wagon_t.id
-    )
-    session.add(new_obj)
-
-    new_obj = Container(
-        name="DFSU2393169",
-        wagon_type_id=wagon_t.id
-    )
-    session.add(new_obj)
-
-    new_obj = Container(
-        name="JZPU2104912",
-        wagon_type_id=wagon_t.id
-    )
-    session.add(new_obj)
-
-    await session.commit()
-    return None
-
-
-async def load_service_types(session):
-    new_obj = ServiceType(
-        name="Экспедирование"
-    )
-    session.add(new_obj)
-
-    new_obj = ServiceType(
-        name="Предоставление ПС"
-    )
-    session.add(new_obj)
-
-    new_obj = ServiceType(
-        name="Экспедирование + Предоставление ПС"
-    )
-    session.add(new_obj)
-
-    await session.commit()
-    return None
-
-
-async def load_operations(session):
-    result = await session.execute(select(Vat))
-    vat = result.scalars().first()
-
-    new_obj = Operation(
-        name="Предоставление ПС",
-        code=None,
-        vat_id=vat.id
-    )
-    session.add(new_obj)
-
-    new_obj = Operation(
-        name="Тариф внутри КЗХ",
-        code=None,
-        vat_id=vat.id
-    )
-    session.add(new_obj)
-
-    new_obj = Operation(
-        name="Транзит КЗХ",
-        code=None,
-        vat_id=vat.id
-    )
-    session.add(new_obj)
-
-    await session.commit()
-    return None
-
-
-async def load_contractors(session):
-    result = await session.execute(select(Country))
-    country = result.scalars().first()
-
-    result = await session.execute(select(Organization))
-    org = result.scalars().first()
-
-    result = await session.execute(select(Currency))
-    currency = result.scalars().first()
-
-    result = await session.execute(select(Bank))
-    bank = result.scalars().first()
-
-    new_obj = Contractor(
-        name="SSGM Logistics",
-        guid=None,
-        full_name="Товарищество с ограниченной ответственностью \"SSGM Logistics\"",
-        bin="230240047238",
-        kbe="17",
-        enterpreneur=False,
-        legal_address="Казахстан, г. Алматы, Бостандыкский район, улица Абиш Кекилбайулы, здание 1, индекс 050000",
-        legal_entity=True,
-        comment=None,
-        document=None,
-        country_id=country.id
-    )
-    session.add(new_obj)
-    await session.flush()
-    new_contract = Contract(
-        name="Договор №1 от 01.01.2024г.",
-        guid=None,
-        number="1",
-        from_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
-        to_date=datetime.strptime("2024-12-31", "%Y-%m-%d").date(),
-        organization_id=org.id,
-        contractor_id=new_obj.id,
-        currency_id=currency.id
-    )
-    session.add(new_contract)
-    new_ba = BankAccount(
-        name="Расчетный счет контрагента",
-        guid=None,
-        number="KZ00000S000000000001",
-        currency_id=currency.id,
-        bank_id=bank.id,
-        contractor_id=new_obj.id,
-        organization_id=None
-    )
-    session.add(new_ba)
-
-    new_obj = Contractor(
-        name="КТЖ-Грузовые перевозки ТОО",
-        guid=None,
-        full_name="Товарищество с ограниченной ответственностью \"КТЖ-Грузовые перевозки\"",
-        bin="031040001799",
-        kbe="17",
-        enterpreneur=False,
-        legal_address="Казахстан, г. Нур-Султан, 010000, район Есиль, ул. Д. Кунаева, 10",
-        legal_entity=True,
-        comment=None,
-        document=None,
-        country_id=country.id
-    )
-    session.add(new_obj)
-    await session.flush()
-    new_contract = Contract(
-        name="Договор №2 от 01.01.2024г.",
-        guid=None,
-        number="2",
-        from_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
-        to_date=datetime.strptime("2024-12-31", "%Y-%m-%d").date(),
-        organization_id=org.id,
-        contractor_id=new_obj.id,
-        currency_id=currency.id
-    )
-    session.add(new_contract)
-    new_ba = BankAccount(
-        name="Расчетный счет контрагента",
-        guid=None,
-        number="KZ00000S000000000001",
-        currency_id=currency.id,
-        bank_id=bank.id,
-        contractor_id=new_obj.id,
-        organization_id=None
-    )
-    session.add(new_ba)
-
-    new_obj = Contractor(
-        name="Кедентранссервис АО",
-        guid=None,
-        full_name="Кедентранссервис АО",
-        bin="990840000825",
-        kbe="17",
-        enterpreneur=False,
-        legal_address="Республика Казахстан, 010016, г. Нур-Султан, Есильский район, улица Достык,18",
-        legal_entity=True,
-        comment=None,
-        document=None,
-        country_id=country.id
-    )
-    session.add(new_obj)
-    await session.flush()
-    new_contract = Contract(
-        name="Договор №3 от 01.01.2024г.",
-        guid=None,
-        number="3",
-        from_date=datetime.strptime("2024-01-01", "%Y-%m-%d").date(),
-        to_date=datetime.strptime("2024-12-31", "%Y-%m-%d").date(),
-        organization_id=org.id,
-        contractor_id=new_obj.id,
-        currency_id=currency.id
-    )
-    session.add(new_contract)
-    new_ba = BankAccount(
-        name="Расчетный счет контрагента",
-        guid=None,
-        number="KZ00000S000000000001",
-        currency_id=currency.id,
-        bank_id=bank.id,
-        contractor_id=new_obj.id,
-        organization_id=None
-    )
-    session.add(new_ba)
-
-    await session.commit()
-    return None
-
-
-async def load_orders(session):
-    result = await session.execute(select(Organization))
-    org = result.scalars().first()
-
-    result = await session.execute(select(User))
-    user = result.scalars().first()
-
-    result = await session.execute(select(Contractor))
-    contractor = result.scalars().first()
-
-    result = await session.execute(select(ServiceType))
-    service = result.scalars().first()
-
-    result = await session.execute(select(Contract).filter(Contract.contractor_id == contractor.id))
-    contract = result.scalars().first()
-
-    for _ in range(100):
-        new_obj = OrderRailWay(
-            date=datetime.strptime("2024-08-24", "%Y-%m-%d").date(),
-            comment="test",
-            sum=1000,
-            amount=2,
-            rate=1,
-            confirmed=False,
-            organization_id=org.id,
-            author_id=user.id,
-            manager_id=user.id,
-            client_id=contractor.id,
-            contract_id=contract.id,
-            service_type_id=service.id
+async def load_currencies(data, session):
+    name = data['name']
+    guid = data['guid']
+    code = data['code']
+
+    result = await session.execute(select(Currency).filter(Currency.guid == guid))
+    obj = result.scalars().first()
+
+    if not obj:
+        new_obj = Currency(
+            name=name,
+            guid=guid,
+            code=code
         )
         session.add(new_obj)
-
     await session.commit()
     return None
+
+
+async def load_banks(data, session):
+    name = data['name']
+    guid = data['guid']
+    bik = data['bik']
+    city = data['city']
+
+    result = await session.execute(select(Bank).filter(Bank.guid == guid))
+    obj = result.scalars().first()
+
+    if not obj:
+        new_obj = Bank(
+            name=name,
+            guid=guid,
+            bik=bik,
+            city=city
+        )
+        session.add(new_obj)
+    await session.commit()
+    return None
+
+
+async def load_vat(data, session):
+    name = data['name']
+    guid = data['guid']
+    rate = data['rate']
+
+    result = await session.execute(select(Vat).filter(Vat.guid == guid))
+    obj = result.scalars().first()
+
+    if not obj:
+        new_obj = Vat(
+            name=name,
+            guid=guid,
+            rate=rate
+        )
+        session.add(new_obj)
+    await session.commit()
+    return None
+
+
+async def load_countries(data, session):
+    name = data['name']
+    guid = data['guid']
+    full_name = data['full_name']
+    code = data['code']
+
+    result = await session.execute(select(Country).filter(Country.guid == guid))
+    obj = result.scalars().first()
+
+    if not obj:
+        new_obj = Country(
+            name=name,
+            guid=guid,
+            full_name=full_name,
+            code=code
+        )
+        session.add(new_obj)
+    await session.commit()
+    return None
+
+
+async def load_organization(data, session):
+    name = data['name']
+    guid = data['guid']
+    full_name = data['full_name']
+    bin_iin = data['bin']
+    kbe = data['kbe']
+    country = data['country']
+    enterpreneur = True
+    legal_entity = True
+    legal_address = data['legal_address']
+    country = data['country']
+
+    result_country = await session.execute(select(Country).filter(Country.name == "Казахстан"))
+    country_obj = result_country.scalars().first()
+
+    result = await session.execute(select(Organization).filter(Organization.guid == guid))
+    obj = result.scalars().first()
+
+    if not obj:
+        new_obj = Organization(
+            name=name,
+            guid=guid,
+            full_name=full_name,
+            bin=bin_iin,
+            kbe=kbe,
+            enterpreneur=enterpreneur,
+            legal_address=legal_address,
+            legal_entity=legal_entity,
+            country_id=country_obj.id
+        )
+        session.add(new_obj)
+    await session.commit()
+    return None
+
+
+async def load_wagons(data, session):
+    name = data['name']
+
+    result = await session.execute(select(Wagon).filter(Wagon.name == name))
+    obj = result.scalars().first()
+
+    if not obj:
+        new_obj = Wagon(
+            name=name,
+            wagon_type_id=None
+        )
+        session.add(new_obj)
+    await session.commit()
+    return None
+
+
+async def load_containers(data, session):
+    container_name = data['name']
+
+    result = await session.execute(select(Container).filter(Container.name == container_name))
+    obj = result.scalars().first()
+
+    if not obj:
+        new_obj = Container(
+            name=container_name,
+            wagon_type_id=None
+        )
+        session.add(new_obj)
+    await session.commit()
+    return None
+
+
+async def load_service_types(data, session):
+    name = data['name']
+
+    result = await session.execute(select(ServiceType).filter(ServiceType.name == name))
+    obj = result.scalars().first()
+
+    if not obj:
+        new_obj = ServiceType(
+            name=name
+        )
+        session.add(new_obj)
+    await session.commit()
+    return None
+
+
+async def load_operations(data, session):
+    name = data['name']
+    vat = data['vat']
+
+    result_vat = await session.execute(select(Vat).filter(Vat.guid == vat))
+    vat_obj = result_vat.scalars().first()
+
+    result = await session.execute(select(Operation).filter(Operation.name == name))
+    obj = result.scalars().first()
+
+    if not obj:
+        new_obj = Operation(
+            name=name,
+            code=None,
+            vat_id=vat_obj.id
+        )
+        session.add(new_obj)
+    await session.commit()
+    return None
+
+
+async def load_contractors(data, session):
+    name = data['name']
+    guid = data['guid']
+    full_name = data['full_name']
+    bin_iin = data['bin']
+    kbe = data['kbe']
+    country = data['country']
+    enterpreneur = data['enterpreneur']
+    legal_entity = data['legal_entity']
+    legal_address = data['legal_address']
+    comment = data['comment']
+    document = data['document']
+    country = data['country']
+
+    result_country = await session.execute(select(Country).filter(Country.guid == country))
+    country_obj = result_country.scalars().first()
+    if not country_obj:
+        result_country = await session.execute(select(Country).filter(Country.name == "Казахстан"))
+        country_obj = result_country.scalars().first()
+
+    result = await session.execute(select(Contractor).filter(Contractor.guid == guid))
+    obj = result.scalars().first()
+
+    if not obj:
+        new_obj = Contractor(
+            name=name,
+            guid=guid,
+            full_name=full_name,
+            bin=bin_iin,
+            kbe=kbe,
+            enterpreneur=enterpreneur,
+            legal_address=legal_address,
+            legal_entity=legal_entity,
+            country_id=country_obj.id,
+            comment=comment,
+            document=document
+        )
+        session.add(new_obj)
+    await session.commit()
+    return None
+
+
+async def load_bank_account_org(data, session):
+    name = data['name']
+    guid = data['guid']
+    number = data['number']
+    currency = data['currency']
+    bank = data['bank']
+    owner = data['owner']
+
+    result_owner = await session.execute(select(Organization).filter(Organization.guid == owner))
+    owner_obj = result_owner.scalars().first()
+
+    result_bank = await session.execute(select(Bank).filter(Bank.guid == bank))
+    bank_obj = result_bank.scalars().first()
+
+    result_currency = await session.execute(select(Currency).filter(Currency.guid == currency))
+    currency_obj = result_currency.scalars().first()
+    if not currency_obj:
+        return None
+
+    result = await session.execute(select(BankAccount).filter(BankAccount.guid == guid))
+    obj = result.scalars().first()
+
+    if not obj:
+        new_obj = BankAccount(
+            name=name,
+            guid=guid,
+            number=number,
+            currency_id=currency_obj.id,
+            bank_id=bank_obj.id,
+            organization_id=owner_obj.id,
+            contractor_id=None
+        )
+        session.add(new_obj)
+    await session.commit()
+    return None
+
+
+async def load_bank_account_cont(data, session):
+    name = data['name']
+    guid = data['guid']
+    number = data['number']
+    currency = data['currency']
+    bank = data['bank']
+    owner = data['owner']
+
+    result_owner = await session.execute(select(Contractor).filter(Contractor.guid == owner))
+    owner_obj = result_owner.scalars().first()
+
+    result_bank = await session.execute(select(Bank).filter(Bank.guid == bank))
+    bank_obj = result_bank.scalars().first()
+
+    result_currency = await session.execute(select(Currency).filter(Currency.guid == currency))
+    currency_obj = result_currency.scalars().first()
+
+    result = await session.execute(select(BankAccount).filter(BankAccount.guid == guid))
+    obj = result.scalars().first()
+
+    if not obj:
+        new_obj = BankAccount(
+            name=name,
+            guid=guid,
+            number=number,
+            currency_id=currency_obj.id,
+            bank_id=bank_obj.id,
+            organization_id=None,
+            contractor_id=owner_obj.id
+        )
+        session.add(new_obj)
+    await session.commit()
+    return None
+
+
+async def load_contracts(data, session):
+    name = data['name']
+    guid = data['guid']
+    organization = data['organization']
+    number = data['number']
+    contractor = data['contractor']
+    currency = data['currency']
+    from_date = parse_date(data['from_date'])
+    to_date = parse_date(data['to_date'])
+
+    result_org = await session.execute(select(Organization).filter(Organization.guid == organization))
+    org_obj = result_org.scalars().first()
+
+    result_contractor = await session.execute(select(Contractor).filter(Contractor.guid == contractor))
+    contractor_obj = result_contractor.scalars().first()
+
+    result_currency = await session.execute(select(Currency).filter(Currency.guid == currency))
+    currency_obj = result_currency.scalars().first()
+    if not currency_obj:
+        return None
+
+    result = await session.execute(select(Contract).filter(Contract.guid == guid))
+    obj = result.scalars().first()
+
+    if not obj:
+        new_obj = Contract(
+            name=name,
+            guid=guid,
+            number=number,
+            from_date=from_date,
+            to_date=to_date,
+            organization_id=org_obj.id,
+            contractor_id=contractor_obj.id,
+            currency_id=currency_obj.id
+        )
+        session.add(new_obj)
+    await session.commit()
+    return None
+
+
+async def load_orders(data, session):
+    date = parse_date(data['date'])
+    comment = data['comment']
+    summ = data['sum']
+    amount = data['amount']
+    rate = data['rate']
+    confirmed = data['confirmed']
+    organization = data['organization']
+    client = data['client']
+    contract = data['contract']
+    service_type = data['service_type']
+    number = data['number']
+
+    result_org = await session.execute(select(Organization).filter(Organization.guid == organization))
+    org_obj = result_org.scalars().first()
+
+    result_client = await session.execute(select(Contractor).filter(Contractor.guid == client))
+    client_obj = result_client.scalars().first()
+
+    result_contract = await session.execute(select(Contract).filter(Contract.guid == contract))
+    contract_obj = result_contract.scalars().first()
+
+    result_st = await session.execute(select(ServiceType).filter(ServiceType.name == service_type))
+    st_obj = result_st.scalars().first()
+
+    result = await session.execute(select(OrderRailWay).filter(OrderRailWay.number == number))
+    obj = result.scalars().first()
+
+    if not obj:
+        new_obj = OrderRailWay(
+            date=date,
+            number=number,
+            comment=comment,
+            sum=summ,
+            amount=amount,
+            rate=rate,
+            confirmed=confirmed,
+            organization_id=org_obj.id,
+            author_id=1,
+            manager_id=1,
+            client_id=client_obj.id,
+            contract_id=contract_obj.id,
+            service_type_id=st_obj.id
+        )
+        session.add(new_obj)
+    await session.commit()
+    return None
+
 
 
 @router.post("/")
 async def import_rail_way_dicts(db: AsyncSession = Depends(get_db)):
     try:
-        rw = await load_rw_json(db)
-        currencies = await load_currencies(db)
-        banks = await load_banks(db)
-        vat = await load_vat(db)
-        countries = await load_countries(db)
-        org = await load_organization(db)
-        wagons = await load_wagons(db)
-        containers = await load_containers(db)
-        st = await load_service_types(db)
-        operations = await load_operations(db)
-        contractor = await load_contractors(db)
-        orders = await load_orders(db)
+        current_dir = os.path.dirname(__file__)
+        json_file = os.path.join(current_dir, 'demo_data.json')
+
+        with open(json_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            for container in data["Container"]:
+                await load_containers(container, db)
+            for vat in data["NDS"]:
+                await load_vat(vat, db)
+            for currency in data["Currency"]:
+                await load_currencies(currency, db)
+            for country in data["Country"]:
+                await load_countries(country, db)
+            for bank in data["Bank"]:
+                await load_banks(bank, db)
+            for org in data["Organization"]:
+                await load_organization(org, db)
+            for contractor in data["Contractor"]:
+                await load_contractors(contractor, db)
+            for bank_account_org in data["BankAccountOrg"]:
+                await load_bank_account_org(bank_account_org, db)
+            for bank_account in data["BankAccount"]:
+                await load_bank_account_cont(bank_account, db)
+            for contract in data["Contract"]:
+                await load_contracts(contract, db)
+            for wagon in data["Wagon"]:
+                await load_wagons(wagon, db)
+            for operation in data["Operation"]:
+                await load_operations(operation, db)
+            for service_type in data["ServiceType"]:
+                await load_service_types(service_type, db)
+            for order in data["OrderRailWay"]:
+                await load_orders(order, db)
+
         return {"status": "SUCCESS"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to import demo data: {str(e)}")
