@@ -19,5 +19,5 @@ class OrderRailWayProvider(Base):
     contract_id = Column(Integer, ForeignKey('contracts.id'), nullable=False)
     operation_id = Column(Integer, ForeignKey('operations.id'), nullable=False)
     vat_id = Column(Integer, ForeignKey('vat.id'), nullable=False)
-    # invoice_id = Column(Integer, ForeignKey('invoices.id'), nullable=True)
+    # act_id = Column(Integer, ForeignKey('acts_in.id'), nullable=True)
     # expense_registration_id = Column(Integer, ForeignKey('expense_registrations.id'), nullable=True)
