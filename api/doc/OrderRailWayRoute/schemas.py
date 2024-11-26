@@ -6,7 +6,6 @@ from decimal import Decimal
 
 class OrderRailWayRouteBase(BaseModel):
     index: int
-    date: datetime
     comment: Optional[str] = None
     weight: Decimal
     sum: Decimal

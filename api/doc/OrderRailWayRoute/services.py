@@ -12,7 +12,6 @@ def obj_meta(obj):
     return {
         "id": {"label": "ID", "value": obj.id},
         "index": {"label": "Номер строки", "value": obj.index},
-        "date": {"label": "Дата", "value": obj.date},
         "created_at": {"label": "Дата создания", "value": obj.created_at},
         "updated_at": {"label": "Дата последнего обновления", "value": obj.updated_at},
         "comment": {"label": "Комментарий", "value": obj.comment},
