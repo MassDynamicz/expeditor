@@ -1,6 +1,7 @@
 import os, importlib
 from fastapi import FastAPI, APIRouter
 from config.utils import camel_to_kebab
+from typing import List, Dict
 
 # Словарь для сопоставления имен файлов с тегами
 tag_mappings = {
@@ -35,8 +36,10 @@ tag_mappings = {
 # Словарь исключений для префиксов
 prefix_exceptions = ["auth"]
 
+routers_sorted = []  # Глобальный список маршрутов
 
 def get_routers(app: FastAPI):
+    global routers_sorted
     base_dir = "api"
     routers = []
 
@@ -79,3 +82,14 @@ def get_routers(app: FastAPI):
     routers_sorted = sorted(routers, key=lambda x: x[1])
     for prefix, tag, router in routers_sorted:
         app.include_router(router, prefix=prefix, tags=[tag])
+
+# Пример API для получения списка рубрик
+app = FastAPI()
+
+@app.get("/rubrics/", response_model=List[Dict[str, str]])
+async def get_rubrics():
+    # Возвращаем список всех маршрутов и их тегов
+    return [{"prefix": prefix, "tag": tag} for prefix, tag, _ in routers_sorted]
+
+# Пример использования функции для регистрации маршрутов
+get_routers(app)

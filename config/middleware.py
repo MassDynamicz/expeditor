@@ -13,6 +13,9 @@ origins = [
     "http://localhost:8081",
     "http://localhost:5173",
     "http://192.168.88.146:5173",
+    "https://expeditor.inovate.kz",
+    "https://expeditor-e897166d1081.herokuapp.com",
+    "https://inovate.kz",
 ]
 
 def add_cors_middleware(app: FastAPI):
