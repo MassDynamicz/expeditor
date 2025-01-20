@@ -2,7 +2,7 @@ from fastapi import Request
 from config.settings import app, templates
 
 
-# root
+# root root
 @app.get("/", tags=["Страницы"])
 async def home_page(request: Request):
     data = {"request": request, "title": 'Главная Expeditor'}

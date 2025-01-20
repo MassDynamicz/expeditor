@@ -3,7 +3,6 @@ from typing import Optional
 from datetime import datetime
 from decimal import Decimal
 
-
 class OrderRailWayBase(BaseModel):
     date: datetime
     comment: Optional[str] = None
